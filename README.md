@@ -1,26 +1,26 @@
 # HydroX - Crypto Trading Dashboard
 
-## 주요 기능
+## Key Features
 
-- 실시간 캔들스틱 차트
-- 실시간 오더북 (20호가)
-- 시장 정보 (가격, 24h 변동률, 거래량)
-- 거래쌍 선택 (BTC, ETH, SOL / PERP, SPOT)
-- 포지션 및 주문 관리 패널
+- Real-time candlestick charts
+- Real-time order book (20 levels)
+- Market information (price, 24h change, volume)
+- Trading pair selection (BTC, ETH, SOL / PERP, SPOT)
+- Position and order management panel
 
-## 시작하기
+## Getting Started
 
 ```bash
-# 패키지 설치
+# Install packages
 npm install
 
-# 개발 서버 실행
+# Run development server
 npm run dev
 ```
 
-http://localhost:3000 에서 확인
+View at http://localhost:3000
 
-## 기술 스택
+## Tech Stack
 
 - Next.js 16
 - Tailwind CSS
