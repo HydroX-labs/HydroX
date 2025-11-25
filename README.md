@@ -1,4 +1,4 @@
-# BaobabX - Crypto Trading Dashboard
+# HydroX - Crypto Trading Dashboard
 
 ## 주요 기능
 
