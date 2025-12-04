@@ -38,7 +38,7 @@ export default function SpotPage() {
             <Chart symbol={selectedSymbol} />
           </div>
           <div className="w-1/4 h-full">
-            <MiddlePanel symbol={selectedSymbol} />
+            <MiddlePanel />
           </div>
           <div className="w-1/4 h-full">
             <TradePanel />
