@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const symbol = searchParams.get("symbol") || "BTC_USDC_PERP";
+  const symbol = searchParams.get("symbol") || "BTC_USDM_PERP";
 
   try {
     const response = await fetch(

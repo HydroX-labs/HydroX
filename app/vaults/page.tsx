@@ -20,7 +20,7 @@ const mockVaultData = {
   lockPeriod: "7 days",
   minDeposit: 100,
   strategy:
-    "Automated momentum trading strategy utilizing perpetual futures on BTC-USDC pair with dynamic risk management.",
+    "Automated momentum trading strategy utilizing perpetual futures on BTC-USDM pair with dynamic risk management.",
 };
 
 const mockPerformanceData = [

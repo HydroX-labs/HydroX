@@ -13,7 +13,7 @@ export default function SpotPage() {
   const params = useParams();
   const symbolParam = params.symbol as string;
 
-  // Spot은 _PERP 없이 그대로 사용 (BTC_USDC -> BTC_USDC)
+  // Spot은 _PERP 없이 그대로 사용 (BTC_USDM -> BTC_USDM)
   const initialSymbol = symbolParam.replace(/_PERP$/, "");
 
   const [selectedSymbol, setSelectedSymbol] = useState(initialSymbol);

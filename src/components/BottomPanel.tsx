@@ -7,7 +7,7 @@ type TabType = "positions" | "openOrders" | "orderHistory" | "balances";
 // Mock data for demonstration
 const mockPositions = [
   {
-    symbol: "BTC_USDC_PERP",
+    symbol: "BTC_USDM_PERP",
     side: "Long",
     size: "0.5",
     entryPrice: "97250.00",
@@ -22,7 +22,7 @@ const mockPositions = [
 const mockOpenOrders = [
   {
     id: "1",
-    symbol: "BTC_USDC_PERP",
+    symbol: "BTC_USDM_PERP",
     side: "Buy",
     type: "Limit",
     price: "96000.00",
@@ -33,7 +33,7 @@ const mockOpenOrders = [
   },
   {
     id: "2",
-    symbol: "ETH_USDC_PERP",
+    symbol: "ETH_USDM_PERP",
     side: "Sell",
     type: "Limit",
     price: "3500.00",
@@ -47,7 +47,7 @@ const mockOpenOrders = [
 const mockOrderHistory = [
   {
     id: "101",
-    symbol: "BTC_USDC_PERP",
+    symbol: "BTC_USDM_PERP",
     side: "Buy",
     type: "Market",
     price: "97250.00",
@@ -59,7 +59,7 @@ const mockOrderHistory = [
 ];
 
 const mockBalances = [
-  { asset: "USDC", available: "10,000.00", inOrder: "960.00", total: "10,960.00" },
+  { asset: "USDM", available: "10,000.00", inOrder: "960.00", total: "10,960.00" },
   { asset: "BTC", available: "0.5", inOrder: "0", total: "0.5" },
   { asset: "ETH", available: "2.0", inOrder: "0", total: "2.0" },
 ];

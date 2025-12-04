@@ -29,7 +29,7 @@ const Header = () => {
           {/* Navigation */}
           <nav className="hidden md:flex space-x-1">
             <Link
-              href="/perp/BTC_USDC"
+              href="/perp/BTC_USDM"
               className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                 isPerpsActive
                   ? "text-white bg-zinc-800 hover:bg-zinc-700"
@@ -39,7 +39,7 @@ const Header = () => {
               Perps
             </Link>
             <Link
-              href="/spot/BTC_USDC"
+              href="/spot/BTC_USDM"
               className={`px-4 py-2 rounded-lg transition-colors text-sm font-medium ${
                 isSpotActive
                   ? "text-white bg-zinc-800 hover:bg-zinc-700"
@@ -111,7 +111,7 @@ const Header = () => {
         <div className="md:hidden mt-4 pt-4 border-t border-zinc-800">
           <nav className="flex flex-col space-y-1">
             <Link
-              href="/perp/BTC_USDC"
+              href="/perp/BTC_USDM"
               className={`px-4 py-2 rounded-lg ${
                 isPerpsActive
                   ? "text-white bg-zinc-800"
@@ -121,7 +121,7 @@ const Header = () => {
               Perps
             </Link>
             <Link
-              href="/spot/BTC_USDC"
+              href="/spot/BTC_USDM"
               className={`px-4 py-2 rounded-lg ${
                 isSpotActive
                   ? "text-white bg-zinc-800"

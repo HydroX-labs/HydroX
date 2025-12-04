@@ -4,7 +4,7 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const symbol = searchParams.get("symbol") || "BTC_USDC_PERP";
+  const symbol = searchParams.get("symbol") || "BTC_USDM_PERP";
   const interval = searchParams.get("interval") || "1h";
 
   // 기본적으로 최근 200개 캔들 조회 (약 8일치 1시간봉)
