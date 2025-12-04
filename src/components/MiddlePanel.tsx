@@ -146,6 +146,8 @@ const MiddlePanel = ({ symbol }: MiddlePanelProps) => {
       }
 
       // Stage 2: Connect to WebSocket for live updates
+      // Backpack WebSocket은 USDC 심볼을 사용하므로 USDM -> USDC 변환
+      const apiSymbol = symbol.replace(/USDM/g, "USDC");
       ws = new WebSocket("wss://ws.backpack.exchange/");
 
       ws.onopen = () => {
@@ -153,9 +155,9 @@ const MiddlePanel = ({ symbol }: MiddlePanelProps) => {
           JSON.stringify({
             method: "SUBSCRIBE",
             params: [
-              `depth.200ms.${symbol}`,
-              `trade.${symbol}`,
-              `markPrice.${symbol}`,
+              `depth.200ms.${apiSymbol}`,
+              `trade.${apiSymbol}`,
+              `markPrice.${apiSymbol}`,
             ],
           })
         );

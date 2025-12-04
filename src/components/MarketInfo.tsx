@@ -49,6 +49,9 @@ export default function MarketInfo({ symbol }: MarketInfoProps) {
       wsRef.current.close();
     }
 
+    // Backpack WebSocket은 USDC 심볼을 사용하므로 USDM -> USDC 변환
+    const apiSymbol = symbol.replace(/USDM/g, "USDC");
+
     const ws = new WebSocket("wss://ws.backpack.exchange/");
     wsRef.current = ws;
 
@@ -56,7 +59,7 @@ export default function MarketInfo({ symbol }: MarketInfoProps) {
       ws.send(
         JSON.stringify({
           method: "SUBSCRIBE",
-          params: [`trade.${symbol}`, `markPrice.${symbol}`],
+          params: [`trade.${apiSymbol}`, `markPrice.${apiSymbol}`],
         })
       );
     };

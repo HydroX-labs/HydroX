@@ -137,6 +137,8 @@ export default function Chart({ symbol }: ChartProps) {
         setIsLoading(false);
 
         // 2. WebSocket 연결하여 실시간 업데이트 구독
+        // Backpack WebSocket은 USDC 심볼을 사용하므로 USDM -> USDC 변환
+        const apiSymbol = symbol.replace(/USDM/g, "USDC");
         const ws = new WebSocket("wss://ws.backpack.exchange/");
         wsRef.current = ws;
 
@@ -145,7 +147,7 @@ export default function Chart({ symbol }: ChartProps) {
           ws.send(
             JSON.stringify({
               method: "SUBSCRIBE",
-              params: [`kline.${interval}.${symbol}`],
+              params: [`kline.${interval}.${apiSymbol}`],
             })
           );
         };
