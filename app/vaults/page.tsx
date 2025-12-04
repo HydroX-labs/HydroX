@@ -4,7 +4,7 @@ import { useState } from "react";
 
 // Mock data for the vault
 const mockVaultData = {
-  name: "BaobobX Liquidity Provider",
+  name: "HydroX Liquidity Provider",
   address:
     "DdzFFzCqrhsszHTvbjTmYje5hehGbadkT6WgWbaqCy5XNxNttsPNF13eAjjBHYT7JaLJz2XVxiucam1EvwBRPSTiCrT4TNCBas4hfzic",
   tvl: 2_847_392.45,
@@ -20,7 +20,7 @@ const mockVaultData = {
   lockPeriod: "7 days",
   minDeposit: 100,
   strategy:
-    "Automated momentum trading strategy utilizing perpetual futures on BTC-USDC pair with dynamic risk management.",
+    "Automated momentum trading strategy utilizing perpetual futures on BTC-USDM pair with dynamic risk management.",
 };
 
 const mockPerformanceData = [

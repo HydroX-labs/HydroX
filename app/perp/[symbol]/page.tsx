@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useParams } from "next/navigation";
 import Chart from "@/components/Chart";
-import MiddlePanel from "@/components/MiddlePanel";
+import TradeHistory from "@/components/TradeHistory";
 import TradePanel from "@/components/TradePanel";
 import SymbolSelector from "@/components/SymbolSelector";
 import MarketInfo from "@/components/MarketInfo";
@@ -13,7 +13,7 @@ export default function PerpPage() {
   const params = useParams();
   const symbolParam = params.symbol as string;
 
-  // URL의 심볼을 PERP 형식으로 변환 (BTC_USDC -> BTC_USDC_PERP)
+  // URL의 심볼을 PERP 형식으로 변환 (BTC_USDM -> BTC_USDM_PERP)
   const initialSymbol = symbolParam.endsWith("_PERP")
     ? symbolParam
     : `${symbolParam}_PERP`;
@@ -39,8 +39,13 @@ export default function PerpPage() {
           <div className="w-1/2 h-full">
             <Chart symbol={selectedSymbol} />
           </div>
-          <div className="w-1/4 h-full">
-            <MiddlePanel symbol={selectedSymbol} />
+          <div className="w-1/4 h-full rounded-lg border border-zinc-800 bg-zinc-900/50 overflow-hidden">
+            <div className="p-3 border-b border-zinc-700">
+              <span className="text-sm font-medium text-white">Trade History</span>
+            </div>
+            <div className="p-3 h-[calc(100%-44px)] overflow-auto">
+              <TradeHistory />
+            </div>
           </div>
           <div className="w-1/4 h-full">
             <TradePanel />

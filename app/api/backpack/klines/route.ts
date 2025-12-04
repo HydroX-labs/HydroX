@@ -4,7 +4,9 @@ export const dynamic = "force-dynamic";
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
-  const symbol = searchParams.get("symbol") || "BTC_USDC_PERP";
+  const symbol = searchParams.get("symbol") || "BTC_USDM_PERP";
+  // Backpack API는 USDC 심볼을 사용하므로 USDM -> USDC 변환
+  const apiSymbol = symbol.replace(/USDM/g, "USDC");
   const interval = searchParams.get("interval") || "1h";
 
   // 기본적으로 최근 200개 캔들 조회 (약 8일치 1시간봉)
@@ -14,7 +16,7 @@ export async function GET(request: Request) {
     : endTime - (200 * 60 * 60); // 200시간 전
 
   try {
-    const url = `https://api.backpack.exchange/api/v1/klines?symbol=${symbol}&interval=${interval}&startTime=${startTime}&endTime=${endTime}`;
+    const url = `https://api.backpack.exchange/api/v1/klines?symbol=${apiSymbol}&interval=${interval}&startTime=${startTime}&endTime=${endTime}`;
 
     const response = await fetch(url, {
       headers: {

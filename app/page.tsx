@@ -9,7 +9,7 @@ import MarketInfo from "@/components/MarketInfo";
 import BottomPanel from "@/components/BottomPanel";
 
 export default function Home() {
-  const [selectedSymbol, setSelectedSymbol] = useState("BTC_USDC_PERP");
+  const [selectedSymbol, setSelectedSymbol] = useState("BTC_USDM_PERP");
 
   return (
     <div

@@ -9,12 +9,12 @@ interface SymbolSelectorProps {
 }
 
 const AVAILABLE_SYMBOLS = [
-  { symbol: "BTC_USDC_PERP", display: "BTC/USDC", type: "PERP" },
-  { symbol: "ETH_USDC_PERP", display: "ETH/USDC", type: "PERP" },
-  { symbol: "SOL_USDC_PERP", display: "SOL/USDC", type: "PERP" },
-  { symbol: "BTC_USDC", display: "BTC/USDC", type: "SPOT" },
-  { symbol: "ETH_USDC", display: "ETH/USDC", type: "SPOT" },
-  { symbol: "SOL_USDC", display: "SOL/USDC", type: "SPOT" },
+  { symbol: "BTC_USDM_PERP", display: "BTC/USDM", type: "PERP" },
+  { symbol: "ETH_USDM_PERP", display: "ETH/USDM", type: "PERP" },
+  { symbol: "SOL_USDM_PERP", display: "SOL/USDM", type: "PERP" },
+  { symbol: "BTC_USDM", display: "BTC/USDM", type: "SPOT" },
+  { symbol: "ETH_USDM", display: "ETH/USDM", type: "SPOT" },
+  { symbol: "SOL_USDM", display: "SOL/USDM", type: "SPOT" },
 ];
 
 const SymbolSelector = ({
@@ -52,7 +52,7 @@ const SymbolSelector = ({
     onSymbolChange(symbol);
     setIsOpen(false);
 
-    // URL 변경: PERP면 /perp/XXX_USDC, SPOT이면 /spot/XXX_USDC
+    // URL 변경: PERP면 /perp/XXX_USDM, SPOT이면 /spot/XXX_USDM
     const isPerp = symbol.endsWith("_PERP");
     const baseSymbol = symbol.replace(/_PERP$/, "");
     const route = isPerp ? `/perp/${baseSymbol}` : `/spot/${baseSymbol}`;

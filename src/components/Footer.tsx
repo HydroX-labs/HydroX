@@ -18,7 +18,7 @@ const Footer = () => {
     // Simulate latency check
     const checkLatency = () => {
       const start = Date.now();
-      fetch('/api/backpack/ticker?symbol=BTC_USDC_PERP', { method: 'HEAD' })
+      fetch('/api/backpack/ticker?symbol=BTC_USDM_PERP', { method: 'HEAD' })
         .then(() => setLatency(Date.now() - start))
         .catch(() => setLatency(null));
     };
