@@ -11,24 +11,24 @@ const TradePanel = () => {
   const leverageOptions = ["1x", "5x", "10x", "20x", "50x", "100x"];
 
   return (
-    <div className="w-full rounded-lg border border-zinc-800 bg-zinc-900/50 p-4 text-white h-full">
-      <div className="flex border-b border-zinc-700">
+    <div className="w-full rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] p-4 text-white h-full">
+      <div className="flex border-b border-[#1f1f1f]">
         <button
           onClick={() => setActiveTab("buy")}
-          className={`py-2 px-4 text-sm font-medium ${
+          className={`py-2 px-4 text-sm font-medium transition-all ${
             activeTab === "buy"
-              ? "border-b-2 border-green-500 text-white"
-              : "text-zinc-400"
+              ? "border-b-2 border-[#00FFE0] text-[#00FFE0]"
+              : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
           Buy
         </button>
         <button
           onClick={() => setActiveTab("sell")}
-          className={`py-2 px-4 text-sm font-medium ${
+          className={`py-2 px-4 text-sm font-medium transition-all ${
             activeTab === "sell"
-              ? "border-b-2 border-red-500 text-white"
-              : "text-zinc-400"
+              ? "border-b-2 border-red-500 text-red-500"
+              : "text-zinc-400 hover:text-zinc-200"
           }`}
         >
           Sell
@@ -37,23 +37,23 @@ const TradePanel = () => {
       <div className="mt-4 space-y-4">
         <div className="flex space-x-2">
           <div className="flex-1">
-            <div className="flex justify-between bg-zinc-800 rounded p-1">
+            <div className="flex justify-between bg-[#141414] border border-[#1f1f1f] rounded p-1">
               <button
                 onClick={() => setMarginType("Cross")}
-                className={`flex-1 py-1 text-sm rounded ${
+                className={`flex-1 py-1 text-sm rounded transition-all ${
                   marginType === "Cross"
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-400 hover:bg-zinc-700/50"
+                    ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                    : "text-zinc-400 hover:bg-[#1a1a1a] hover:text-zinc-200"
                 }`}
               >
                 Cross
               </button>
               <button
                 onClick={() => setMarginType("Isolated")}
-                className={`flex-1 py-1 text-sm rounded ${
+                className={`flex-1 py-1 text-sm rounded transition-all ${
                   marginType === "Isolated"
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-400 hover:bg-zinc-700/50"
+                    ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                    : "text-zinc-400 hover:bg-[#1a1a1a] hover:text-zinc-200"
                 }`}
               >
                 Isolated
@@ -63,15 +63,15 @@ const TradePanel = () => {
         </div>
         <div>
           <label className="block text-xs text-zinc-400 mb-1">Leverage</label>
-          <div className="flex justify-between bg-zinc-800 rounded p-1">
+          <div className="flex justify-between bg-[#141414] border border-[#1f1f1f] rounded p-1">
             {leverageOptions.map((option) => (
               <button
                 key={option}
                 onClick={() => setLeverage(option)}
-                className={`flex-1 py-1 text-sm rounded ${
+                className={`flex-1 py-1 text-sm rounded transition-all ${
                   leverage === option
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-400 hover:bg-zinc-700/50"
+                    ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                    : "text-zinc-400 hover:bg-[#1a1a1a] hover:text-zinc-200"
                 }`}
               >
                 {option}
@@ -87,7 +87,7 @@ const TradePanel = () => {
             type="text"
             id="price"
             defaultValue="Market"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-sm"
+            className="w-full bg-[#141414] border border-[#1f1f1f] rounded p-2 text-sm focus:border-[#00FFE0]/50 focus:outline-none focus:ring-1 focus:ring-[#00FFE0]/20 transition-all"
           />
         </div>
         <div>
@@ -98,7 +98,7 @@ const TradePanel = () => {
             type="text"
             id="amount"
             placeholder="0.00"
-            className="w-full bg-zinc-800 border border-zinc-700 rounded p-2 text-sm"
+            className="w-full bg-[#141414] border border-[#1f1f1f] rounded p-2 text-sm focus:border-[#00FFE0]/50 focus:outline-none focus:ring-1 focus:ring-[#00FFE0]/20 transition-all"
           />
         </div>
         <div className="flex items-center justify-between">
@@ -108,7 +108,7 @@ const TradePanel = () => {
               id="reduceOnly"
               checked={reduceOnly}
               onChange={(e) => setReduceOnly(e.target.checked)}
-              className="h-4 w-4 text-green-500 rounded border-gray-600 focus:ring-green-500"
+              className="h-4 w-4 rounded border-[#1f1f1f] bg-[#141414] text-[#00FFE0] focus:ring-[#00FFE0]/50 accent-[#00FFE0]"
             />
             <label htmlFor="reduceOnly" className="ml-2 text-sm text-zinc-400">
               Reduce Only
@@ -118,7 +118,7 @@ const TradePanel = () => {
             id="timeInForce"
             value={timeInForce}
             onChange={(e) => setTimeInForce(e.target.value)}
-            className="bg-zinc-800 border-none rounded p-1 text-sm text-zinc-300"
+            className="bg-[#141414] border border-[#1f1f1f] rounded p-1 text-sm text-zinc-300 focus:border-[#00FFE0]/50 focus:outline-none"
           >
             <option>GTC</option>
             <option>IOC</option>
@@ -130,11 +130,11 @@ const TradePanel = () => {
           <span>0.00 USD</span>
         </div>
         {activeTab === "buy" ? (
-          <button className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded">
+          <button className="w-full bg-[#00FFE0] hover:bg-[#00FFE0]/90 text-black font-bold py-2 px-4 rounded transition-all hover:shadow-[0_0_20px_rgba(0,255,224,0.4)]">
             Buy BTC
           </button>
         ) : (
-          <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded">
+          <button className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded transition-all hover:shadow-[0_0_15px_rgba(239,68,68,0.4)]">
             Sell BTC
           </button>
         )}

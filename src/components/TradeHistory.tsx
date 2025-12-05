@@ -1,10 +1,10 @@
 import React from 'react';
 
 const TradeHistoryRow = ({ price, amount, time, isBuy }: { price: string; amount: string; time: string; isBuy: boolean }) => (
-  <div className={`flex justify-between text-xs ${isBuy ? 'text-green-500' : 'text-red-500'}`}>
+  <div className={`flex justify-between text-xs font-mono ${isBuy ? 'text-[#00FFE0]' : 'text-red-500'}`}>
     <span>{price}</span>
-    <span>{amount}</span>
-    <span>{time}</span>
+    <span className="text-zinc-300">{amount}</span>
+    <span className="text-zinc-500">{time}</span>
   </div>
 );
 
@@ -20,7 +20,7 @@ const TradeHistory = () => {
 
   return (
     <div className="w-full text-white h-full flex flex-col">
-      <div className="flex justify-between text-sm text-zinc-400 mb-2">
+      <div className="flex justify-between text-sm text-zinc-500 mb-2">
         <span>Price (USD)</span>
         <span>Amount (BTC)</span>
         <span>Time</span>

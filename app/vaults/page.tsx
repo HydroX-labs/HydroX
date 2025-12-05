@@ -99,14 +99,14 @@ export default function VaultsPage() {
   };
 
   return (
-    <div className="bg-zinc-950 font-sans h-full overflow-auto">
+    <div className="bg-[#0a0a0a] font-sans h-full overflow-auto">
       <div className="p-4 flex flex-col gap-4 max-w-7xl mx-auto">
         {/* Vault Header */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+        <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-6">
           <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
             <div className="flex items-center gap-4">
-              <div className="w-12 h-12 rounded-xl bg-linear-to-br from-orange-500 to-yellow-500 flex items-center justify-center">
-                <span className="font-bold text-lg">BTC</span>
+              <div className="w-12 h-12 rounded-xl bg-[#00FFE0]/20 border border-[#00FFE0]/30 flex items-center justify-center">
+                <span className="font-bold text-lg text-[#00FFE0]">BTC</span>
               </div>
               <div>
                 <h1 className="text-xl font-bold text-white">
@@ -119,10 +119,10 @@ export default function VaultsPage() {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 text-sm font-medium rounded-full">
+              <span className="px-3 py-1 bg-[#00FFE0]/10 text-[#00FFE0] text-sm font-medium rounded-full border border-[#00FFE0]/30">
                 Active
               </span>
-              <span className="px-3 py-1 bg-blue-500/20 text-blue-400 text-sm font-medium rounded-full">
+              <span className="px-3 py-1 bg-[#00FFE0]/5 text-[#00FFE0]/70 text-sm font-medium rounded-full border border-[#00FFE0]/20">
                 Verified
               </span>
             </div>
@@ -130,25 +130,25 @@ export default function VaultsPage() {
 
           {/* Stats Grid */}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-            <div className="bg-zinc-800/50 rounded-lg p-4">
+            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
               <p className="text-zinc-400 text-sm">Total Value Locked</p>
               <p className="text-white text-xl font-bold mt-1">
                 {formatCurrency(mockVaultData.tvl)}
               </p>
             </div>
-            <div className="bg-zinc-800/50 rounded-lg p-4">
+            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
               <p className="text-zinc-400 text-sm">APY</p>
-              <p className="text-emerald-400 text-xl font-bold mt-1">
+              <p className="text-[#00FFE0] text-xl font-bold mt-1 drop-shadow-[0_0_8px_rgba(0,255,224,0.4)]">
                 {mockVaultData.apy}%
               </p>
             </div>
-            <div className="bg-zinc-800/50 rounded-lg p-4">
+            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
               <p className="text-zinc-400 text-sm">Depositors</p>
               <p className="text-white text-xl font-bold mt-1">
                 {mockVaultData.depositors.toLocaleString()}
               </p>
             </div>
-            <div className="bg-zinc-800/50 rounded-lg p-4">
+            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
               <p className="text-zinc-400 text-sm">Capacity Used</p>
               <div className="mt-1">
                 <p className="text-white text-xl font-bold">
@@ -157,9 +157,9 @@ export default function VaultsPage() {
                   )}
                   %
                 </p>
-                <div className="w-full bg-zinc-700 rounded-full h-1.5 mt-2">
+                <div className="w-full bg-[#1f1f1f] rounded-full h-1.5 mt-2">
                   <div
-                    className="bg-gradient-to-r from-blue-500 to-purple-600 h-1.5 rounded-full"
+                    className="bg-gradient-to-r from-[#00FFE0] to-[#00D4AA] h-1.5 rounded-full shadow-[0_0_10px_rgba(0,255,224,0.4)]"
                     style={{
                       width: `${
                         (mockVaultData.tvl / mockVaultData.capacity) * 100
@@ -175,17 +175,17 @@ export default function VaultsPage() {
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
           {/* Chart Section */}
-          <div className="lg:col-span-2 bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+          <div className="lg:col-span-2 bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-6">
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-white font-semibold">Performance</h2>
               <div className="flex gap-2">
                 {["1D", "1W", "1M", "3M", "1Y", "ALL"].map((period) => (
                   <button
                     key={period}
-                    className={`px-3 py-1 text-sm rounded-lg transition-colors ${
+                    className={`px-3 py-1 text-sm rounded-lg transition-all ${
                       period === "1Y"
-                        ? "bg-zinc-700 text-white"
-                        : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                        ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                        : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
                     }`}
                   >
                     {period}
@@ -201,7 +201,7 @@ export default function VaultsPage() {
                 <p
                   className={`font-medium ${
                     mockVaultData.dailyChange >= 0
-                      ? "text-emerald-400"
+                      ? "text-[#00FFE0]"
                       : "text-red-400"
                   }`}
                 >
@@ -214,7 +214,7 @@ export default function VaultsPage() {
                 <p
                   className={`font-medium ${
                     mockVaultData.weeklyChange >= 0
-                      ? "text-emerald-400"
+                      ? "text-[#00FFE0]"
                       : "text-red-400"
                   }`}
                 >
@@ -227,7 +227,7 @@ export default function VaultsPage() {
                 <p
                   className={`font-medium ${
                     mockVaultData.monthlyChange >= 0
-                      ? "text-emerald-400"
+                      ? "text-[#00FFE0]"
                       : "text-red-400"
                   }`}
                 >
@@ -245,7 +245,7 @@ export default function VaultsPage() {
                   className="flex-1 flex flex-col items-center gap-1"
                 >
                   <div
-                    className="w-full bg-gradient-to-t from-blue-600 to-purple-500 rounded-t opacity-80 hover:opacity-100 transition-opacity"
+                    className="w-full bg-gradient-to-t from-[#00FFE0] to-[#00D4AA] rounded-t opacity-70 hover:opacity-100 transition-opacity shadow-[0_0_15px_rgba(0,255,224,0.3)]"
                     style={{ height: `${(point.value / 200) * 100}%` }}
                   />
                   <span className="text-zinc-500 text-xs">{point.date}</span>
@@ -255,24 +255,24 @@ export default function VaultsPage() {
           </div>
 
           {/* Deposit/Withdraw Panel */}
-          <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+          <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-6">
             <div className="flex gap-2 mb-6">
               <button
                 onClick={() => setActiveTab("deposit")}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
                   activeTab === "deposit"
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:text-white"
+                    ? "bg-[#00FFE0] text-black shadow-[0_0_20px_rgba(0,255,224,0.4)]"
+                    : "bg-[#141414] border border-[#1f1f1f] text-zinc-400 hover:text-white hover:border-[#00FFE0]/30"
                 }`}
               >
                 Deposit
               </button>
               <button
                 onClick={() => setActiveTab("withdraw")}
-                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-colors ${
+                className={`flex-1 py-2 text-sm font-medium rounded-lg transition-all ${
                   activeTab === "withdraw"
-                    ? "bg-gradient-to-r from-blue-500 to-purple-600 text-white"
-                    : "bg-zinc-800 text-zinc-400 hover:text-white"
+                    ? "bg-[#00FFE0] text-black shadow-[0_0_20px_rgba(0,255,224,0.4)]"
+                    : "bg-[#141414] border border-[#1f1f1f] text-zinc-400 hover:text-white hover:border-[#00FFE0]/30"
                 }`}
               >
                 Withdraw
@@ -290,15 +290,15 @@ export default function VaultsPage() {
                     value={amount}
                     onChange={(e) => setAmount(e.target.value)}
                     placeholder="0.00"
-                    className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-blue-500"
+                    className="w-full bg-[#141414] border border-[#1f1f1f] rounded-lg px-4 py-3 text-white placeholder-zinc-500 focus:outline-none focus:border-[#00FFE0]/50 focus:ring-1 focus:ring-[#00FFE0]/20 transition-all"
                   />
-                  <button className="absolute right-3 top-1/2 -translate-y-1/2 text-blue-400 text-sm font-medium hover:text-blue-300">
+                  <button className="absolute right-3 top-1/2 -translate-y-1/2 text-[#00FFE0] text-sm font-medium hover:text-[#00FFE0]/80">
                     MAX
                   </button>
                 </div>
               </div>
 
-              <div className="bg-zinc-800/50 rounded-lg p-4 space-y-2">
+              <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4 space-y-2">
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">Your Balance</span>
                   <span className="text-white">10,000.00 USDM</span>
@@ -315,7 +315,7 @@ export default function VaultsPage() {
                 </div>
               </div>
 
-              <button className="w-full py-3 bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white font-medium rounded-lg transition-all">
+              <button className="w-full py-3 bg-[#00FFE0] hover:bg-[#00FFE0]/90 text-black font-semibold rounded-lg transition-all hover:shadow-[0_0_20px_rgba(0,255,224,0.4)]">
                 {activeTab === "deposit" ? "Deposit" : "Withdraw"}
               </button>
 
@@ -327,26 +327,26 @@ export default function VaultsPage() {
         </div>
 
         {/* Transaction History */}
-        <div className="bg-zinc-900 border border-zinc-800 rounded-lg p-6">
+        <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg p-6">
           <div className="flex items-center justify-between mb-4">
             <h2 className="text-white font-semibold">History</h2>
             <div className="flex gap-2">
               <button
                 onClick={() => setHistoryTab("transactions")}
-                className={`px-4 py-1.5 text-sm rounded-lg transition-colors ${
+                className={`px-4 py-1.5 text-sm rounded-lg transition-all ${
                   historyTab === "transactions"
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                    : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
                 }`}
               >
                 Transactions
               </button>
               <button
                 onClick={() => setHistoryTab("positions")}
-                className={`px-4 py-1.5 text-sm rounded-lg transition-colors ${
+                className={`px-4 py-1.5 text-sm rounded-lg transition-all ${
                   historyTab === "positions"
-                    ? "bg-zinc-700 text-white"
-                    : "text-zinc-400 hover:text-white hover:bg-zinc-800"
+                    ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                    : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
                 }`}
               >
                 Positions
@@ -357,7 +357,7 @@ export default function VaultsPage() {
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="text-zinc-400 text-sm border-b border-zinc-800">
+                <tr className="text-zinc-400 text-sm border-b border-[#1f1f1f]">
                   <th className="text-left py-3 font-medium">Type</th>
                   <th className="text-right py-3 font-medium">Amount</th>
                   <th className="text-right py-3 font-medium">Address</th>
@@ -369,14 +369,14 @@ export default function VaultsPage() {
                 {mockTransactions.map((tx, index) => (
                   <tr
                     key={index}
-                    className="border-b border-zinc-800/50 hover:bg-zinc-800/30"
+                    className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors"
                   >
                     <td className="py-3">
                       <span
-                        className={`px-2 py-1 text-xs font-medium rounded ${
+                        className={`px-2 py-1 text-xs font-medium rounded border ${
                           tx.type === "Deposit"
-                            ? "bg-emerald-500/20 text-emerald-400"
-                            : "bg-red-500/20 text-red-400"
+                            ? "bg-[#00FFE0]/10 text-[#00FFE0] border-[#00FFE0]/30"
+                            : "bg-red-500/10 text-red-400 border-red-500/30"
                         }`}
                       >
                         {tx.type}
@@ -392,7 +392,7 @@ export default function VaultsPage() {
                       {tx.time}
                     </td>
                     <td className="text-right">
-                      <span className="text-emerald-400 text-sm">
+                      <span className="text-[#00FFE0] text-sm">
                         {tx.status}
                       </span>
                     </td>
