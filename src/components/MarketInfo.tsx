@@ -125,7 +125,7 @@ export default function MarketInfo({ symbol }: MarketInfoProps) {
         <div className="flex flex-col">
           <span
             className={`text-xl font-bold ${
-              isPositive ? "text-green-500" : "text-red-500"
+              isPositive ? "text-[#00FFE0] drop-shadow-[0_0_8px_rgba(0,255,224,0.4)]" : "text-red-500"
             }`}
           >
             ${formatPrice(ticker.lastPrice)}
@@ -136,14 +136,14 @@ export default function MarketInfo({ symbol }: MarketInfoProps) {
         </div>
 
         {/* 구분선 */}
-        <div className="h-8 w-px bg-zinc-700" />
+        <div className="h-8 w-px bg-[#1f1f1f]" />
 
         {/* 24h 변동률 */}
         <div className="flex flex-col">
           <span className="text-[10px] text-zinc-500 uppercase">24h Change</span>
           <span
             className={`text-sm font-medium ${
-              isPositive ? "text-green-500" : "text-red-500"
+              isPositive ? "text-[#00FFE0]" : "text-red-500"
             }`}
           >
             {isPositive ? "+" : ""}

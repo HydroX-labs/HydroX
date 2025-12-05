@@ -66,14 +66,14 @@ const SymbolSelector = ({
         <div className="relative" ref={dropdownRef}>
           <button
             onClick={() => setIsOpen(!isOpen)}
-            className="flex items-center gap-2 px-3 py-2 bg-zinc-800 hover:bg-zinc-700 rounded-lg transition-colors"
+            className="flex items-center gap-2 px-3 py-2 bg-[#141414] hover:bg-[#1a1a1a] border border-[#1f1f1f] hover:border-[#00FFE0]/30 rounded-lg transition-all"
           >
             <span className="text-white font-bold text-lg">{displayName}</span>
             <span
               className={`text-xs px-1.5 py-0.5 rounded ${
                 symbolType === "PERP"
-                  ? "bg-purple-500/20 text-purple-400"
-                  : "bg-blue-500/20 text-blue-400"
+                  ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                  : "bg-[#00FFE0]/5 text-[#00FFE0]/70 border border-[#00FFE0]/20"
               }`}
             >
               {symbolType}
@@ -97,22 +97,22 @@ const SymbolSelector = ({
 
           {/* 드롭다운 메뉴 */}
           {isOpen && (
-            <div className="absolute top-full left-0 mt-1 w-64 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 overflow-hidden">
+            <div className="absolute top-full left-0 mt-1 w-64 bg-[#0f0f0f] border border-[#1f1f1f] rounded-lg shadow-xl shadow-black/50 z-50 overflow-hidden">
               {/* PERP 섹션 */}
-              <div className="px-3 py-2 text-xs text-zinc-500 border-b border-zinc-700">
-                Prepetuals
+              <div className="px-3 py-2 text-xs text-[#00FFE0]/70 border-b border-[#1f1f1f] bg-[#00FFE0]/5">
+                Perpetuals
               </div>
               {AVAILABLE_SYMBOLS.filter((s) => s.type === "PERP").map(
                 (item) => (
                   <button
                     key={item.symbol}
                     onClick={() => handleSelect(item.symbol)}
-                    className={`w-full flex items-center justify-between px-3 py-2 hover:bg-zinc-700 transition-colors ${
-                      selectedSymbol === item.symbol ? "bg-zinc-700" : ""
+                    className={`w-full flex items-center justify-between px-3 py-2 hover:bg-[#00FFE0]/10 transition-colors ${
+                      selectedSymbol === item.symbol ? "bg-[#00FFE0]/10" : ""
                     }`}
                   >
-                    <span className="text-white">{item.display}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400">
+                    <span className={`${selectedSymbol === item.symbol ? 'text-[#00FFE0]' : 'text-white'}`}>{item.display}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30">
                       PERP
                     </span>
                   </button>
@@ -120,7 +120,7 @@ const SymbolSelector = ({
               )}
 
               {/* SPOT 섹션 */}
-              <div className="px-3 py-2 text-xs text-zinc-500 border-y border-zinc-700">
+              <div className="px-3 py-2 text-xs text-[#00FFE0]/70 border-y border-[#1f1f1f] bg-[#00FFE0]/5">
                 Spot
               </div>
               {AVAILABLE_SYMBOLS.filter((s) => s.type === "SPOT").map(
@@ -128,12 +128,12 @@ const SymbolSelector = ({
                   <button
                     key={item.symbol}
                     onClick={() => handleSelect(item.symbol)}
-                    className={`w-full flex items-center justify-between px-3 py-2 hover:bg-zinc-700 transition-colors ${
-                      selectedSymbol === item.symbol ? "bg-zinc-700" : ""
+                    className={`w-full flex items-center justify-between px-3 py-2 hover:bg-[#00FFE0]/10 transition-colors ${
+                      selectedSymbol === item.symbol ? "bg-[#00FFE0]/10" : ""
                     }`}
                   >
-                    <span className="text-white">{item.display}</span>
-                    <span className="text-xs px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-400">
+                    <span className={`${selectedSymbol === item.symbol ? 'text-[#00FFE0]' : 'text-white'}`}>{item.display}</span>
+                    <span className="text-xs px-1.5 py-0.5 rounded bg-[#00FFE0]/5 text-[#00FFE0]/70 border border-[#00FFE0]/20">
                       SPOT
                     </span>
                   </button>

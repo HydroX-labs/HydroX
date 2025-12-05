@@ -40,39 +40,43 @@ export default function Chart({ symbol }: ChartProps) {
     const chart = createChart(chartContainerRef.current, {
       layout: {
         background: { type: ColorType.Solid, color: "transparent" },
-        textColor: "#9ca3af",
+        textColor: "#6b7280",
       },
       grid: {
-        vertLines: { color: "#27272a" },
-        horzLines: { color: "#27272a" },
+        vertLines: { color: "#1a1a1a" },
+        horzLines: { color: "#1a1a1a" },
       },
       width: chartContainerRef.current.clientWidth,
       height: chartContainerRef.current.clientHeight || 400,
       crosshair: {
         vertLine: {
-          color: "#6b7280",
-          labelBackgroundColor: "#374151",
+          color: "#00FFE0",
+          labelBackgroundColor: "#0f0f0f",
         },
         horzLine: {
-          color: "#6b7280",
-          labelBackgroundColor: "#374151",
+          color: "#00FFE0",
+          labelBackgroundColor: "#0f0f0f",
         },
       },
       timeScale: {
         timeVisible: true,
         secondsVisible: false,
+        borderColor: "#1a1a1a",
+      },
+      rightPriceScale: {
+        borderColor: "#1a1a1a",
       },
     });
 
     chartRef.current = chart;
 
     const candlestickSeries = chart.addSeries(CandlestickSeries, {
-      upColor: "#22c55e",
+      upColor: "#00FFE0",
       downColor: "#ef4444",
       borderDownColor: "#ef4444",
-      borderUpColor: "#22c55e",
+      borderUpColor: "#00FFE0",
       wickDownColor: "#ef4444",
-      wickUpColor: "#22c55e",
+      wickUpColor: "#00FFE0",
     });
 
     seriesRef.current = candlestickSeries;
@@ -199,10 +203,16 @@ export default function Chart({ symbol }: ChartProps) {
   }, [symbol, interval]);
 
   return (
-    <div className="relative w-full h-full rounded-lg border border-zinc-800 bg-zinc-900/50">
+    <div className="relative w-full h-full rounded-lg border border-[#1a1a1a] bg-[#0f0f0f]">
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-zinc-900/80 z-10">
-          <div className="text-zinc-400">Loading chart...</div>
+        <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]/80 z-10">
+          <div className="flex items-center gap-2 text-[#00FFE0]">
+            <svg className="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span>Loading chart...</span>
+          </div>
         </div>
       )}
       <div ref={chartContainerRef} className="w-full h-full" />
