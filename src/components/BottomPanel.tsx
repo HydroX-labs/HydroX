@@ -4,72 +4,56 @@ import { useState } from "react";
 
 type TabType = "positions" | "openOrders" | "orderHistory" | "balances";
 
-// Mock data for demonstration
-const mockPositions = [
-  {
-    symbol: "BTC_USDM_PERP",
-    side: "Long",
-    size: "0.5",
-    entryPrice: "97250.00",
-    markPrice: "97500.00",
-    pnl: "+125.00",
-    pnlPercent: "+0.26%",
-    leverage: "10x",
-    liquidationPrice: "87525.00",
-  },
-];
+// TODO: API에서 데이터 로드
+const positions: {
+  symbol: string;
+  side: string;
+  size: string;
+  entryPrice: string;
+  markPrice: string;
+  pnl: string;
+  pnlPercent: string;
+  leverage: string;
+  liquidationPrice: string;
+}[] = [];
 
-const mockOpenOrders = [
-  {
-    id: "1",
-    symbol: "BTC_USDM_PERP",
-    side: "Buy",
-    type: "Limit",
-    price: "96000.00",
-    amount: "0.1",
-    filled: "0",
-    status: "Open",
-    time: "2024-01-15 14:30:22",
-  },
-  {
-    id: "2",
-    symbol: "ETH_USDM_PERP",
-    side: "Sell",
-    type: "Limit",
-    price: "3500.00",
-    amount: "1.5",
-    filled: "0",
-    status: "Open",
-    time: "2024-01-15 14:25:10",
-  },
-];
+const openOrders: {
+  id: string;
+  symbol: string;
+  side: string;
+  type: string;
+  price: string;
+  amount: string;
+  filled: string;
+  status: string;
+  time: string;
+}[] = [];
 
-const mockOrderHistory = [
-  {
-    id: "101",
-    symbol: "BTC_USDM_PERP",
-    side: "Buy",
-    type: "Market",
-    price: "97250.00",
-    amount: "0.5",
-    filled: "0.5",
-    status: "Filled",
-    time: "2024-01-15 12:00:00",
-  },
-];
+const orderHistory: {
+  id: string;
+  symbol: string;
+  side: string;
+  type: string;
+  price: string;
+  amount: string;
+  filled: string;
+  status: string;
+  time: string;
+}[] = [];
 
-const mockBalances = [
-  { asset: "USDM", available: "10,000.00", inOrder: "960.00", total: "10,960.00" },
-  { asset: "BTC", available: "0.5", inOrder: "0", total: "0.5" },
-  { asset: "ETH", available: "2.0", inOrder: "0", total: "2.0" },
-];
+const balances: {
+  asset: string;
+  available: string;
+  inOrder: string;
+  total: string;
+}[] = [];
 
 export default function BottomPanel() {
   const [activeTab, setActiveTab] = useState<TabType>("positions");
 
   const tabs: { key: TabType; label: string; count?: number }[] = [
-    { key: "positions", label: "Positions", count: mockPositions.length },
-    { key: "openOrders", label: "Open Orders", count: mockOpenOrders.length },
+    { key: "positions", label: "Positions", count: positions.length },
+    { key: "openOrders", label: "Open Orders", count: openOrders.length },
     { key: "orderHistory", label: "Order History" },
     { key: "balances", label: "Balances" },
   ];
@@ -113,12 +97,26 @@ export default function BottomPanel() {
   );
 }
 
+function EmptyState({ message, icon }: { message: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+      <div className="opacity-30 mb-2">{icon}</div>
+      <p className="text-sm">{message}</p>
+    </div>
+  );
+}
+
 function PositionsTable() {
-  if (mockPositions.length === 0) {
+  if (positions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        No open positions
-      </div>
+      <EmptyState
+        message="No open positions"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        }
+      />
     );
   }
 
@@ -138,7 +136,7 @@ function PositionsTable() {
         </tr>
       </thead>
       <tbody>
-        {mockPositions.map((pos, idx) => {
+        {positions.map((pos, idx) => {
           const isPnlPositive = pos.pnl.startsWith("+");
           return (
             <tr key={idx} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
@@ -171,11 +169,16 @@ function PositionsTable() {
 }
 
 function OpenOrdersTable() {
-  if (mockOpenOrders.length === 0) {
+  if (openOrders.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        No open orders
-      </div>
+      <EmptyState
+        message="No open orders"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        }
+      />
     );
   }
 
@@ -194,7 +197,7 @@ function OpenOrdersTable() {
         </tr>
       </thead>
       <tbody>
-        {mockOpenOrders.map((order) => (
+        {openOrders.map((order) => (
           <tr key={order.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
             <td className="px-4 py-3 text-zinc-400">{order.time}</td>
             <td className="px-4 py-3 text-white">{order.symbol.replace(/_/g, "/")}</td>
@@ -221,11 +224,16 @@ function OpenOrdersTable() {
 }
 
 function OrderHistoryTable() {
-  if (mockOrderHistory.length === 0) {
+  if (orderHistory.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        No order history
-      </div>
+      <EmptyState
+        message="No order history"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      />
     );
   }
 
@@ -244,7 +252,7 @@ function OrderHistoryTable() {
         </tr>
       </thead>
       <tbody>
-        {mockOrderHistory.map((order) => (
+        {orderHistory.map((order) => (
           <tr key={order.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
             <td className="px-4 py-3 text-zinc-400">{order.time}</td>
             <td className="px-4 py-3 text-white">{order.symbol.replace(/_/g, "/")}</td>
@@ -274,6 +282,19 @@ function OrderHistoryTable() {
 }
 
 function BalancesTable() {
+  if (balances.length === 0) {
+    return (
+      <EmptyState
+        message="No assets"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        }
+      />
+    );
+  }
+
   return (
     <table className="w-full text-sm">
       <thead className="text-zinc-400 text-xs sticky top-0 bg-[#0f0f0f]">
@@ -286,7 +307,7 @@ function BalancesTable() {
         </tr>
       </thead>
       <tbody>
-        {mockBalances.map((balance) => (
+        {balances.map((balance) => (
           <tr key={balance.asset} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">

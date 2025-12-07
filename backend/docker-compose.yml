@@ -1,0 +1,158 @@
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:16-alpine
+    container_name: hydrox-postgres
+    environment:
+      POSTGRES_USER: hydrox
+      POSTGRES_PASSWORD: hydrox_secret
+      POSTGRES_DB: hydrox
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hydrox"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hydrox-network
+
+  # Redis for caching and pub/sub
+  redis:
+    image: redis:7-alpine
+    container_name: hydrox-redis
+    command: redis-server --appendonly yes --maxmemory 256mb --maxmemory-policy allkeys-lru
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hydrox-network
+
+  # API Gateway
+  gateway:
+    build:
+      context: ./services/gateway
+      dockerfile: Dockerfile
+    container_name: hydrox-gateway
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MARKET_SERVICE_URL=http://market:8081
+      - TRADING_SERVICE_URL=http://trading:8082
+      - VAULT_SERVICE_URL=http://vault:8083
+      - USER_SERVICE_URL=http://user:8084
+      - REDIS_URL=redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      market:
+        condition: service_started
+      trading:
+        condition: service_started
+      vault:
+        condition: service_started
+      user:
+        condition: service_started
+    networks:
+      - hydrox-network
+
+  # Market Data Service
+  market:
+    build:
+      context: ./services/market
+      dockerfile: Dockerfile
+    container_name: hydrox-market
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - REDIS_URL=redis:6379
+      - DATABASE_URL=postgres://hydrox:hydrox_secret@postgres:5432/hydrox?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+  # Trading Service
+  trading:
+    build:
+      context: ./services/trading
+      dockerfile: Dockerfile
+    container_name: hydrox-trading
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - REDIS_URL=redis:6379
+      - DATABASE_URL=postgres://hydrox:hydrox_secret@postgres:5432/hydrox?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+  # Vault Service
+  vault:
+    build:
+      context: ./services/vault
+      dockerfile: Dockerfile
+    container_name: hydrox-vault
+    ports:
+      - "8083:8083"
+    environment:
+      - PORT=8083
+      - REDIS_URL=redis:6379
+      - DATABASE_URL=postgres://hydrox:hydrox_secret@postgres:5432/hydrox?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+  # User Service
+  user:
+    build:
+      context: ./services/user
+      dockerfile: Dockerfile
+    container_name: hydrox-user
+    ports:
+      - "8084:8084"
+    environment:
+      - PORT=8084
+      - REDIS_URL=redis:6379
+      - DATABASE_URL=postgres://hydrox:hydrox_secret@postgres:5432/hydrox?sslmode=disable
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  hydrox-network:
+    driver: bridge
+

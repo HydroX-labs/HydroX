@@ -7,30 +7,7 @@ import {
   IChartApi,
   CandlestickSeries,
   ISeriesApi,
-  CandlestickData,
-  Time,
 } from "lightweight-charts";
-
-// Mock 데이터 - 정적 차트용
-const generateMockData = (): CandlestickData<Time>[] => {
-  const data: CandlestickData<Time>[] = [];
-  let basePrice = 97000;
-  const now = Math.floor(Date.now() / 1000);
-  const hourInSeconds = 3600;
-
-  for (let i = 100; i >= 0; i--) {
-    const time = (now - i * hourInSeconds) as Time;
-    const open = basePrice + (Math.random() - 0.5) * 500;
-    const close = open + (Math.random() - 0.5) * 800;
-    const high = Math.max(open, close) + Math.random() * 300;
-    const low = Math.min(open, close) - Math.random() * 300;
-
-    data.push({ time, open, high, low, close });
-    basePrice = close;
-  }
-
-  return data;
-};
 
 export default function Chart() {
   const chartContainerRef = useRef<HTMLDivElement>(null);
@@ -85,10 +62,9 @@ export default function Chart() {
 
     seriesRef.current = candlestickSeries;
 
-    // Mock 데이터 로드
-    const mockData = generateMockData();
-    candlestickSeries.setData(mockData);
-    chart.timeScale().fitContent();
+    // TODO: API에서 차트 데이터 로드
+    // candlestickSeries.setData(chartData);
+    // chart.timeScale().fitContent();
 
     const handleResize = () => {
       if (chartContainerRef.current) {
@@ -110,6 +86,15 @@ export default function Chart() {
   return (
     <div className="relative w-full h-full rounded-lg border border-[#1a1a1a] bg-[#0f0f0f]">
       <div ref={chartContainerRef} className="w-full h-full" />
+      {/* Empty State Overlay */}
+      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+        <div className="text-center text-zinc-500">
+          <svg className="w-12 h-12 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+          </svg>
+          <p className="text-sm">Waiting for chart data...</p>
+        </div>
+      </div>
     </div>
   );
 }
