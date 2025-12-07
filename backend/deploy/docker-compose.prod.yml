@@ -1,0 +1,170 @@
+# Production-ready docker-compose for EC2
+# 단일 인스턴스에서 모든 서비스 실행
+
+version: '3.8'
+
+services:
+  # PostgreSQL Database
+  postgres:
+    image: postgres:14-alpine
+    container_name: hydrox-postgres
+    restart: always
+    environment:
+      POSTGRES_DB: hydrox_db
+      POSTGRES_USER: hydrox_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-hydrox_secret_2024}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U hydrox_user -d hydrox_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hydrox-network
+
+  # Redis Cache
+  redis:
+    image: redis:7-alpine
+    container_name: hydrox-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - hydrox-network
+
+  # API Gateway (메인 진입점)
+  gateway:
+    image: hydrox/gateway:latest
+    container_name: hydrox-gateway
+    restart: always
+    ports:
+      - "8080:8080"
+    environment:
+      - PORT=8080
+      - MARKET_SERVICE_URL=http://market:8081
+      - TRADING_SERVICE_URL=http://trading:8082
+      - VAULT_SERVICE_URL=http://vault:8083
+      - USER_SERVICE_URL=http://user:8084
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      redis:
+        condition: service_healthy
+      market:
+        condition: service_started
+      trading:
+        condition: service_started
+    networks:
+      - hydrox-network
+
+  # Market Service
+  market:
+    image: hydrox/market:latest
+    container_name: hydrox-market
+    restart: always
+    ports:
+      - "8081:8081"
+    environment:
+      - PORT=8081
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=hydrox_user
+      - DB_PASSWORD=${DB_PASSWORD:-hydrox_secret_2024}
+      - DB_NAME=hydrox_db
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+  # Trading Service
+  trading:
+    image: hydrox/trading:latest
+    container_name: hydrox-trading
+    restart: always
+    ports:
+      - "8082:8082"
+    environment:
+      - PORT=8082
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=hydrox_user
+      - DB_PASSWORD=${DB_PASSWORD:-hydrox_secret_2024}
+      - DB_NAME=hydrox_db
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+  # Vault Service
+  vault:
+    image: hydrox/vault:latest
+    container_name: hydrox-vault
+    restart: always
+    ports:
+      - "8083:8083"
+    environment:
+      - PORT=8083
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=hydrox_user
+      - DB_PASSWORD=${DB_PASSWORD:-hydrox_secret_2024}
+      - DB_NAME=hydrox_db
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+  # User Service
+  user:
+    image: hydrox/user:latest
+    container_name: hydrox-user
+    restart: always
+    ports:
+      - "8084:8084"
+    environment:
+      - PORT=8084
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USER=hydrox_user
+      - DB_PASSWORD=${DB_PASSWORD:-hydrox_secret_2024}
+      - DB_NAME=hydrox_db
+      - REDIS_ADDR=redis:6379
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    networks:
+      - hydrox-network
+
+volumes:
+  postgres_data:
+  redis_data:
+
+networks:
+  hydrox-network:
+    driver: bridge
+
