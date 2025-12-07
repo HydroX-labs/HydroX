@@ -1,55 +1,63 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { tradingApi, Position, Order, Balance } from "@/lib/api";
 
 type TabType = "positions" | "openOrders" | "orderHistory" | "balances";
 
-// TODO: API에서 데이터 로드
-const positions: {
-  symbol: string;
-  side: string;
-  size: string;
-  entryPrice: string;
-  markPrice: string;
-  pnl: string;
-  pnlPercent: string;
-  leverage: string;
-  liquidationPrice: string;
-}[] = [];
-
-const openOrders: {
-  id: string;
-  symbol: string;
-  side: string;
-  type: string;
-  price: string;
-  amount: string;
-  filled: string;
-  status: string;
-  time: string;
-}[] = [];
-
-const orderHistory: {
-  id: string;
-  symbol: string;
-  side: string;
-  type: string;
-  price: string;
-  amount: string;
-  filled: string;
-  status: string;
-  time: string;
-}[] = [];
-
-const balances: {
-  asset: string;
-  available: string;
-  inOrder: string;
-  total: string;
-}[] = [];
-
 export default function BottomPanel() {
   const [activeTab, setActiveTab] = useState<TabType>("positions");
+  const [positions, setPositions] = useState<Position[]>([]);
+  const [openOrders, setOpenOrders] = useState<Order[]>([]);
+  const [orderHistory, setOrderHistory] = useState<Order[]>([]);
+  const [balances, setBalances] = useState<Balance[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [posData, ordersData, historyData, balData] = await Promise.all([
+          tradingApi.getPositions(),
+          tradingApi.getOrders(),
+          tradingApi.getOrderHistory(),
+          tradingApi.getBalances(),
+        ]);
+        setPositions(posData);
+        setOpenOrders(ordersData);
+        setOrderHistory(historyData);
+        setBalances(balData);
+      } catch (err) {
+        console.error("Failed to load data:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+
+    // Refresh every 10 seconds
+    const interval = setInterval(loadData, 10000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleClosePosition = async (positionId: string) => {
+    try {
+      await tradingApi.closePosition(positionId);
+      setPositions(prev => prev.filter(p => p.id !== positionId));
+    } catch (err) {
+      console.error("Failed to close position:", err);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await tradingApi.cancelOrder(orderId);
+      setOpenOrders(prev => prev.filter(o => o.id !== orderId));
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+    }
+  };
 
   const tabs: { key: TabType; label: string; count?: number }[] = [
     { key: "positions", label: "Positions", count: positions.length },
@@ -60,7 +68,7 @@ export default function BottomPanel() {
 
   return (
     <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg overflow-hidden">
-      {/* 탭 헤더 */}
+      {/* Tab Header */}
       <div className="flex border-b border-[#1f1f1f]">
         {tabs.map((tab) => (
           <button
@@ -86,12 +94,28 @@ export default function BottomPanel() {
         ))}
       </div>
 
-      {/* 탭 컨텐츠 */}
+      {/* Tab Content */}
       <div className="h-[200px] overflow-y-auto scrollbar-hide">
-        {activeTab === "positions" && <PositionsTable />}
-        {activeTab === "openOrders" && <OpenOrdersTable />}
-        {activeTab === "orderHistory" && <OrderHistoryTable />}
-        {activeTab === "balances" && <BalancesTable />}
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-zinc-500">
+            <span className="animate-pulse">Loading...</span>
+          </div>
+        ) : (
+          <>
+            {activeTab === "positions" && (
+              <PositionsTable positions={positions} onClose={handleClosePosition} />
+            )}
+            {activeTab === "openOrders" && (
+              <OpenOrdersTable orders={openOrders} onCancel={handleCancelOrder} />
+            )}
+            {activeTab === "orderHistory" && (
+              <OrderHistoryTable orders={orderHistory} />
+            )}
+            {activeTab === "balances" && (
+              <BalancesTable balances={balances} />
+            )}
+          </>
+        )}
       </div>
     </div>
   );
@@ -106,7 +130,7 @@ function EmptyState({ message, icon }: { message: string; icon: React.ReactNode 
   );
 }
 
-function PositionsTable() {
+function PositionsTable({ positions, onClose }: { positions: Position[]; onClose: (id: string) => void }) {
   if (positions.length === 0) {
     return (
       <EmptyState
@@ -136,27 +160,30 @@ function PositionsTable() {
         </tr>
       </thead>
       <tbody>
-        {positions.map((pos, idx) => {
-          const isPnlPositive = pos.pnl.startsWith("+");
+        {positions.map((pos) => {
+          const isPnlPositive = pos.unrealized_pnl >= 0;
           return (
-            <tr key={idx} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
+            <tr key={pos.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
               <td className="px-4 py-3 text-white">{pos.symbol.replace(/_/g, "/")}</td>
               <td className={`px-4 py-3 ${pos.side === "Long" ? "text-[#00FFE0]" : "text-red-500"}`}>
                 {pos.side}
               </td>
               <td className="px-4 py-3 text-right text-white">{pos.size}</td>
-              <td className="px-4 py-3 text-right text-zinc-300">${pos.entryPrice}</td>
-              <td className="px-4 py-3 text-right text-zinc-300">${pos.markPrice}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">${pos.entry_price.toFixed(2)}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">${pos.mark_price.toFixed(2)}</td>
               <td className={`px-4 py-3 text-right ${isPnlPositive ? "text-[#00FFE0]" : "text-red-500"}`}>
-                ${pos.pnl} ({pos.pnlPercent})
+                ${isPnlPositive ? "+" : ""}{pos.unrealized_pnl.toFixed(2)} ({pos.pnl_percent.toFixed(2)}%)
               </td>
-              <td className="px-4 py-3 text-right text-[#00FFE0]/70">{pos.leverage}</td>
-              <td className="px-4 py-3 text-right text-zinc-400">${pos.liquidationPrice}</td>
+              <td className="px-4 py-3 text-right text-[#00FFE0]/70">{pos.leverage}x</td>
+              <td className="px-4 py-3 text-right text-zinc-400">${pos.liquidation_price.toFixed(2)}</td>
               <td className="px-4 py-3 text-center">
                 <button className="px-2 py-1 text-xs bg-[#1a1a1a] hover:bg-[#00FFE0]/10 hover:text-[#00FFE0] border border-[#1f1f1f] hover:border-[#00FFE0]/30 rounded mr-1 transition-all">
                   TP/SL
                 </button>
-                <button className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all">
+                <button 
+                  onClick={() => onClose(pos.id)}
+                  className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all"
+                >
                   Close
                 </button>
               </td>
@@ -168,8 +195,8 @@ function PositionsTable() {
   );
 }
 
-function OpenOrdersTable() {
-  if (openOrders.length === 0) {
+function OpenOrdersTable({ orders, onCancel }: { orders: Order[]; onCancel: (id: string) => void }) {
+  if (orders.length === 0) {
     return (
       <EmptyState
         message="No open orders"
@@ -197,9 +224,9 @@ function OpenOrdersTable() {
         </tr>
       </thead>
       <tbody>
-        {openOrders.map((order) => (
+        {orders.map((order) => (
           <tr key={order.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
-            <td className="px-4 py-3 text-zinc-400">{order.time}</td>
+            <td className="px-4 py-3 text-zinc-400">{order.created_at}</td>
             <td className="px-4 py-3 text-white">{order.symbol.replace(/_/g, "/")}</td>
             <td className="px-4 py-3 text-zinc-300">{order.type}</td>
             <td className={`px-4 py-3 ${order.side === "Buy" ? "text-[#00FFE0]" : "text-red-500"}`}>
@@ -212,7 +239,10 @@ function OpenOrdersTable() {
               <button className="px-2 py-1 text-xs bg-[#1a1a1a] hover:bg-[#00FFE0]/10 hover:text-[#00FFE0] border border-[#1f1f1f] hover:border-[#00FFE0]/30 rounded mr-1 transition-all">
                 Edit
               </button>
-              <button className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all">
+              <button 
+                onClick={() => onCancel(order.id)}
+                className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all"
+              >
                 Cancel
               </button>
             </td>
@@ -223,8 +253,8 @@ function OpenOrdersTable() {
   );
 }
 
-function OrderHistoryTable() {
-  if (orderHistory.length === 0) {
+function OrderHistoryTable({ orders }: { orders: Order[] }) {
+  if (orders.length === 0) {
     return (
       <EmptyState
         message="No order history"
@@ -252,9 +282,9 @@ function OrderHistoryTable() {
         </tr>
       </thead>
       <tbody>
-        {orderHistory.map((order) => (
+        {orders.map((order) => (
           <tr key={order.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
-            <td className="px-4 py-3 text-zinc-400">{order.time}</td>
+            <td className="px-4 py-3 text-zinc-400">{order.created_at}</td>
             <td className="px-4 py-3 text-white">{order.symbol.replace(/_/g, "/")}</td>
             <td className="px-4 py-3 text-zinc-300">{order.type}</td>
             <td className={`px-4 py-3 ${order.side === "Buy" ? "text-[#00FFE0]" : "text-red-500"}`}>
@@ -281,7 +311,7 @@ function OrderHistoryTable() {
   );
 }
 
-function BalancesTable() {
+function BalancesTable({ balances }: { balances: Balance[] }) {
   if (balances.length === 0) {
     return (
       <EmptyState
@@ -317,9 +347,9 @@ function BalancesTable() {
                 <span className="text-white font-medium">{balance.asset}</span>
               </div>
             </td>
-            <td className="px-4 py-3 text-right text-white">{balance.available}</td>
-            <td className="px-4 py-3 text-right text-zinc-400">{balance.inOrder}</td>
-            <td className="px-4 py-3 text-right text-zinc-300">{balance.total}</td>
+            <td className="px-4 py-3 text-right text-white">{balance.available.toFixed(2)}</td>
+            <td className="px-4 py-3 text-right text-zinc-400">{balance.locked.toFixed(2)}</td>
+            <td className="px-4 py-3 text-right text-zinc-300">{balance.total.toFixed(2)}</td>
             <td className="px-4 py-3 text-center">
               <button className="px-2 py-1 text-xs bg-[#00FFE0]/10 text-[#00FFE0] hover:bg-[#00FFE0]/20 border border-[#00FFE0]/30 rounded mr-1 transition-all">
                 Deposit
