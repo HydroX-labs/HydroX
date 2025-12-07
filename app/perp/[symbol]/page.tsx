@@ -22,12 +22,12 @@ export default function PerpPage() {
 
   return (
     <div
-      className="bg-zinc-950 font-sans h-full flex flex-col"
+      className="bg-[#0a0a0a] font-sans h-full flex flex-col"
       style={{ overflowY: "overlay" }}
     >
       <div id="exchange" className="p-4 flex flex-col gap-3">
         {/* 거래쌍 선택 + 시장 정보 */}
-        <div className="flex items-stretch bg-zinc-900 border border-zinc-800 rounded-lg shrink-0">
+        <div className="flex items-stretch bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg shrink-0">
           <SymbolSelector
             selectedSymbol={selectedSymbol}
             onSymbolChange={setSelectedSymbol}
@@ -39,8 +39,8 @@ export default function PerpPage() {
           <div className="w-1/2 h-full">
             <Chart symbol={selectedSymbol} />
           </div>
-          <div className="w-1/4 h-full rounded-lg border border-zinc-800 bg-zinc-900/50 overflow-hidden">
-            <div className="p-3 border-b border-zinc-700">
+          <div className="w-1/4 h-full rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] overflow-hidden">
+            <div className="p-3 border-b border-[#1f1f1f]">
               <span className="text-sm font-medium text-white">Trade History</span>
             </div>
             <div className="p-3 h-[calc(100%-44px)] overflow-auto">
