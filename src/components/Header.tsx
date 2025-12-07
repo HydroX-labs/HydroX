@@ -25,8 +25,7 @@ const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
 
-  const isPerpsActive = pathname.startsWith("/perp/");
-  const isSpotActive = pathname.startsWith("/spot/");
+  const isTradeActive = pathname.startsWith("/perp/") || pathname.startsWith("/spot/");
   const isVaultsActive = pathname.startsWith("/vaults");
 
   return (
@@ -46,22 +45,12 @@ const Header = () => {
             <Link
               href="/perp/BTC_USDM"
               className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
-                isPerpsActive
+                isTradeActive
                   ? "text-[#00FFE0] bg-[#00FFE0]/10 border border-[#00FFE0]/30"
                   : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
               }`}
             >
-              Perps
-            </Link>
-            <Link
-              href="/spot/BTC_USDM"
-              className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
-                isSpotActive
-                  ? "text-[#00FFE0] bg-[#00FFE0]/10 border border-[#00FFE0]/30"
-                  : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-              }`}
-            >
-              Spot
+              Trade
             </Link>
             <Link
               href="/vaults"
@@ -72,18 +61,6 @@ const Header = () => {
               }`}
             >
               Vaults
-            </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5 transition-all text-sm font-medium"
-            >
-              Portfolio
-            </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5 transition-all text-sm font-medium"
-            >
-              Affiliate
             </Link>
           </nav>
         </div>
@@ -128,22 +105,12 @@ const Header = () => {
             <Link
               href="/perp/BTC_USDM"
               className={`px-4 py-2 rounded-lg ${
-                isPerpsActive
+                isTradeActive
                   ? "text-[#00FFE0] bg-[#00FFE0]/10"
                   : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
               }`}
             >
-              Perps
-            </Link>
-            <Link
-              href="/spot/BTC_USDM"
-              className={`px-4 py-2 rounded-lg ${
-                isSpotActive
-                  ? "text-[#00FFE0] bg-[#00FFE0]/10"
-                  : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-              }`}
-            >
-              Spot
+              Trade
             </Link>
             <Link
               href="/vaults"
@@ -154,18 +121,6 @@ const Header = () => {
               }`}
             >
               Vaults
-            </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-            >
-              Portfolio
-            </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-            >
-              Affiliate
             </Link>
           </nav>
           <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-[#1a1a1a]">
