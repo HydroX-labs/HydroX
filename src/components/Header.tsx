@@ -3,6 +3,8 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useWallet } from "@/contexts/WalletContext";
+import { useToast } from "@/components/Toast";
 
 // HydroX Logo Component - matching landing page
 const HydroXLogo = ({ className }: { className?: string }) => (
@@ -21,13 +23,44 @@ const HydroXLogo = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// Wallet Icon
+const WalletIcon = ({ className }: { className?: string }) => (
+  <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M21 12V7H5a2 2 0 0 1 0-4h14v4" />
+    <path d="M3 5v14a2 2 0 0 0 2 2h16v-5" />
+    <path d="M18 12a2 2 0 0 0 0 4h4v-4h-4z" />
+  </svg>
+);
+
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const pathname = usePathname();
+  const { walletAddress, isConnecting, isLaceAvailable, connectWallet, disconnectWallet } = useWallet();
+  const { showToast } = useToast();
 
-  const isPerpsActive = pathname.startsWith("/perp/");
-  const isSpotActive = pathname.startsWith("/spot/");
+  const handleConnectWallet = async () => {
+    try {
+      await connectWallet();
+      // No toast on success - wallet connection is shown in the header
+    } catch (error) {
+      const err = error as Error;
+      showToast({
+        type: "error",
+        title: "Connection Failed",
+        message: err.message,
+      });
+    }
+  };
+
+  const isPerpetualsActive = pathname.startsWith("/perpetuals") || pathname === "/";
   const isVaultsActive = pathname.startsWith("/vaults");
+  const isStatsActive = pathname.startsWith("/stats");
+
+  // Format address for display
+  const formatAddress = (address: string) => {
+    if (address.length <= 16) return address;
+    return `${address.slice(0, 8)}...${address.slice(-8)}`;
+  };
 
   return (
     <header className="bg-[#0a0a0a] border-b border-[#1a1a1a] text-white px-6 py-3 shrink-0 z-50">
@@ -44,24 +77,14 @@ const Header = () => {
           {/* Navigation */}
           <nav className="hidden md:flex space-x-1">
             <Link
-              href="/perp/BTC_USDM"
+              href="/perpetuals"
               className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
-                isPerpsActive
+                isPerpetualsActive
                   ? "text-[#00FFE0] bg-[#00FFE0]/10 border border-[#00FFE0]/30"
                   : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
               }`}
             >
-              Perps
-            </Link>
-            <Link
-              href="/spot/BTC_USDM"
-              className={`px-4 py-2 rounded-lg transition-all text-sm font-medium ${
-                isSpotActive
-                  ? "text-[#00FFE0] bg-[#00FFE0]/10 border border-[#00FFE0]/30"
-                  : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-              }`}
-            >
-              Spot
+              Perpetuals
             </Link>
             <Link
               href="/vaults"
@@ -74,28 +97,50 @@ const Header = () => {
               Vaults
             </Link>
             <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5 transition-all text-sm font-medium"
+              href="/stats"
+              className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-1.5 ${
+                isStatsActive
+                  ? "text-yellow-500 bg-yellow-500/10 border border-yellow-500/30 border-dashed"
+                  : "text-yellow-500/70 hover:text-yellow-500 hover:bg-yellow-500/5 border border-dashed border-yellow-500/20"
+              }`}
             >
-              Portfolio
-            </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5 transition-all text-sm font-medium"
-            >
-              Affiliate
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Stats
             </Link>
           </nav>
         </div>
 
-        {/* Right side buttons */}
-        <div className="hidden md:flex items-center space-x-3">
-          <button className="px-4 py-2 text-sm font-medium text-zinc-300 hover:text-[#00FFE0] transition-colors">
-            Sign In
-          </button>
-          <button className="px-4 py-2 text-sm font-semibold bg-[#00FFE0] hover:bg-[#00FFE0]/90 text-black rounded-lg transition-all hover:shadow-[0_0_20px_rgba(0,255,224,0.4)]">
-            Get Started
-          </button>
+        {/* Right side - Wallet Connection */}
+        <div className="hidden md:flex items-center">
+          {walletAddress ? (
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 px-3 py-2 bg-[#00FFE0]/10 border border-[#00FFE0]/30 rounded-lg shadow-[0_0_15px_rgba(0,255,224,0.1)]">
+                <div className="w-2 h-2 bg-[#00FFE0] rounded-full animate-pulse shadow-[0_0_8px_rgba(0,255,224,0.6)]" />
+                <span className="text-sm font-mono text-[#00FFE0] font-medium">
+                  {formatAddress(walletAddress)}
+                </span>
+              </div>
+              <button
+                onClick={disconnectWallet}
+                className="px-3 py-2 text-sm text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/10 rounded-lg transition-all"
+              >
+                Disconnect
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={handleConnectWallet}
+              disabled={isConnecting || !isLaceAvailable}
+              className="flex items-center gap-2 px-4 py-2 bg-[#00FFE0]/10 border border-[#00FFE0]/30 rounded-lg text-[#00FFE0] hover:bg-[#00FFE0]/20 hover:border-[#00FFE0]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(0,255,224,0.1)]"
+            >
+              <WalletIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">
+                {isConnecting ? "Connecting..." : isLaceAvailable ? "Connect Wallet" : "Install Lace"}
+              </span>
+            </button>
+          )}
         </div>
 
         {/* Mobile menu button */}
@@ -126,24 +171,14 @@ const Header = () => {
         <div className="md:hidden mt-4 pt-4 border-t border-[#1a1a1a]">
           <nav className="flex flex-col space-y-1">
             <Link
-              href="/perp/BTC_USDM"
+              href="/perpetuals"
               className={`px-4 py-2 rounded-lg ${
-                isPerpsActive
+                isPerpetualsActive
                   ? "text-[#00FFE0] bg-[#00FFE0]/10"
                   : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
               }`}
             >
-              Perps
-            </Link>
-            <Link
-              href="/spot/BTC_USDM"
-              className={`px-4 py-2 rounded-lg ${
-                isSpotActive
-                  ? "text-[#00FFE0] bg-[#00FFE0]/10"
-                  : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-              }`}
-            >
-              Spot
+              Perpetuals
             </Link>
             <Link
               href="/vaults"
@@ -156,25 +191,47 @@ const Header = () => {
               Vaults
             </Link>
             <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
+              href="/stats"
+              className={`px-4 py-2 rounded-lg flex items-center gap-1.5 ${
+                isStatsActive
+                  ? "text-yellow-500 bg-yellow-500/10 border border-yellow-500/30 border-dashed"
+                  : "text-yellow-500/70 hover:text-yellow-500 hover:bg-yellow-500/5"
+              }`}
             >
-              Portfolio
-            </Link>
-            <Link
-              href="#"
-              className="px-4 py-2 rounded-lg text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
-            >
-              Affiliate
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              Stats (Dev)
             </Link>
           </nav>
-          <div className="flex flex-col space-y-2 mt-4 pt-4 border-t border-[#1a1a1a]">
-            <button className="w-full py-2 text-sm font-medium text-zinc-300 hover:text-[#00FFE0]">
-              Sign In
-            </button>
-            <button className="w-full py-2 text-sm font-semibold bg-[#00FFE0] hover:bg-[#00FFE0]/90 text-black rounded-lg">
-              Get Started
-            </button>
+          <div className="mt-4 pt-4 border-t border-[#1a1a1a]">
+            {walletAddress ? (
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 px-3 py-2 bg-[#00FFE0]/10 border border-[#00FFE0]/30 rounded-lg">
+                  <div className="w-2 h-2 bg-[#00FFE0] rounded-full animate-pulse" />
+                  <span className="text-sm font-mono text-[#00FFE0]">
+                    {formatAddress(walletAddress)}
+                  </span>
+                </div>
+                <button
+                  onClick={disconnectWallet}
+                  className="w-full px-3 py-2 text-sm text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/10 rounded-lg transition-all"
+                >
+                  Disconnect
+                </button>
+              </div>
+            ) : (
+              <button
+                onClick={handleConnectWallet}
+                disabled={isConnecting || !isLaceAvailable}
+                className="w-full flex items-center justify-center gap-2 px-4 py-2 bg-[#00FFE0]/10 border border-[#00FFE0]/30 rounded-lg text-[#00FFE0] hover:bg-[#00FFE0]/20 hover:border-[#00FFE0]/50 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <WalletIcon className="w-4 h-4" />
+                <span className="text-sm font-medium">
+                  {isConnecting ? "Connecting..." : isLaceAvailable ? "Connect Wallet" : "Install Lace"}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       )}

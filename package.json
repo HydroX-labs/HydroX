@@ -1,5 +1,5 @@
 {
-  "name": "baobob-x-mockup",
+  "name": "hydrox-mockup",
   "version": "0.1.0",
   "private": true,
   "scripts": {
@@ -9,8 +9,10 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@lucid-evolution/lucid": "^0.4.29",
     "big.js": "^7.0.1",
     "lightweight-charts": "^5.0.9",
+    "lucid-cardano": "^0.10.11",
     "next": "16.0.3",
     "react": "19.2.0",
     "react-dom": "19.2.0"

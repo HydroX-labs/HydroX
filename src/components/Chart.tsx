@@ -10,28 +10,21 @@ import {
   CandlestickData,
   Time,
 } from "lightweight-charts";
+import { marketApi, getWSClient, Kline } from "@/lib/api";
 
 interface ChartProps {
-  symbol: string;
+  symbol?: string;
 }
 
-interface KlineData {
-  start: string;
-  open: string;
-  high: string;
-  low: string;
-  close: string;
-  volume: string;
-}
+type Interval = "1m" | "5m" | "1d";
 
-export default function Chart({ symbol }: ChartProps) {
+export default function Chart({ symbol = "BTC_USDM" }: ChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);
-  const wsRef = useRef<WebSocket | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-
-  const interval = "1h";
+  const [error, setError] = useState<string | null>(null);
+  const [interval, setInterval] = useState<Interval>("1m");
 
   // 차트 초기화
   useEffect(() => {
@@ -60,7 +53,7 @@ export default function Chart({ symbol }: ChartProps) {
       },
       timeScale: {
         timeVisible: true,
-        secondsVisible: false,
+        secondsVisible: true,
         borderColor: "#1a1a1a",
       },
       rightPriceScale: {
@@ -98,112 +91,115 @@ export default function Chart({ symbol }: ChartProps) {
     };
   }, []);
 
-  // 심볼 변경 시 데이터 fetch 및 WebSocket 연결
+  // 데이터 로드 + 실시간 업데이트
   useEffect(() => {
     if (!seriesRef.current || !chartRef.current) return;
 
-    // 기존 WebSocket 연결 종료
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
+    // Time scale 설정 (interval에 따라)
+    if (chartRef.current) {
+      chartRef.current.timeScale().applyOptions({
+        timeVisible: true,
+        secondsVisible: interval === "1m" || interval === "5m",
+      });
     }
 
-    const fetchKlinesAndSubscribe = async () => {
+    const loadData = async () => {
       setIsLoading(true);
+      setError(null);
 
       try {
-        // 1. REST API로 초기 데이터 로드
-        const response = await fetch(
-          `/api/backpack/klines?symbol=${symbol}&interval=${interval}`
-        );
-
-        if (!response.ok) {
-          throw new Error("Failed to fetch klines");
-        }
-
-        const data: KlineData[] = await response.json();
-
-        // Backpack API 응답을 lightweight-charts 형식으로 변환
-        const chartData: CandlestickData<Time>[] = data.map((item) => ({
-          time: Math.floor(new Date(item.start).getTime() / 1000) as Time,
-          open: parseFloat(item.open),
-          high: parseFloat(item.high),
-          low: parseFloat(item.low),
-          close: parseFloat(item.close),
+        // 선택한 interval로 데이터 로드
+        const klines = await marketApi.getKlines(symbol, interval);
+        
+        const chartData: CandlestickData<Time>[] = klines.map((k: Kline) => ({
+          time: k.time as Time,
+          open: k.open,
+          high: k.high,
+          low: k.low,
+          close: k.close,
         }));
 
-        // 시간순 정렬
+        // Sort by time
         chartData.sort((a, b) => (a.time as number) - (b.time as number));
 
-        seriesRef.current?.setData(chartData);
-        chartRef.current?.timeScale().fitContent();
-
+        if (seriesRef.current) {
+          seriesRef.current.setData(chartData);
+        }
+        if (chartRef.current) {
+          chartRef.current.timeScale().fitContent();
+        }
+        
         setIsLoading(false);
-
-        // 2. WebSocket 연결하여 실시간 업데이트 구독
-        // Backpack WebSocket은 USDC 심볼을 사용하므로 USDM -> USDC 변환
-        const apiSymbol = symbol.replace(/USDM/g, "USDC");
-        const ws = new WebSocket("wss://ws.backpack.exchange/");
-        wsRef.current = ws;
-
-        ws.onopen = () => {
-          console.log("[Chart] WebSocket connected");
-          ws.send(
-            JSON.stringify({
-              method: "SUBSCRIBE",
-              params: [`kline.${interval}.${apiSymbol}`],
-            })
-          );
-        };
-
-        ws.onmessage = (event) => {
-          try {
-            const message = JSON.parse(event.data);
-
-            // kline 이벤트 처리
-            if (message.data?.e === "kline") {
-              const d = message.data;
-
-              // 즉시 업데이트 - Date.parse가 new Date보다 빠름
-              seriesRef.current?.update({
-                time: (Date.parse(d.t + "Z") / 1000) as Time,
-                open: +d.o,
-                high: +d.h,
-                low: +d.l,
-                close: +d.c,
-              });
-            }
-          } catch {
-            // 파싱 에러 무시
-          }
-        };
-
-        ws.onerror = (error) => {
-          console.error("[Chart] WebSocket error:", error);
-        };
-
-        ws.onclose = () => {
-          console.log("[Chart] WebSocket closed");
-        };
-      } catch (error) {
-        console.error("Failed to fetch klines:", error);
+      } catch (err) {
+        console.error("Failed to load chart data:", err);
+        setError("Failed to load chart data");
         setIsLoading(false);
       }
     };
 
-    fetchKlinesAndSubscribe();
+    loadData();
 
-    // cleanup
+    // Subscribe to real-time kline updates (1m만 실시간 업데이트)
+    const ws = getWSClient();
+    ws.connect();
+
+    let unsubscribe: (() => void) | null = null;
+    let reloadInterval: number | null = null;
+    
+    // 1분봉만 실시간 업데이트 (다른 interval은 주기적으로 재로드)
+    if (interval === "1m") {
+      unsubscribe = ws.subscribe(`kline.1m.${symbol}`, (data: unknown) => {
+        const kline = data as { t: number; o: number; h: number; l: number; c: number; v: number };
+        if (seriesRef.current) {
+          seriesRef.current.update({
+            time: kline.t as Time,
+            open: kline.o,
+            high: kline.h,
+            low: kline.l,
+            close: kline.c,
+          });
+        }
+      });
+    } else {
+      // 5m, 1d는 주기적으로 재로드
+      reloadInterval = window.setInterval(() => {
+        loadData();
+      }, interval === "5m" ? 5000 : 60000); // 5분봉은 5초마다, 1일봉은 1분마다
+    }
+
     return () => {
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
-      }
+      if (unsubscribe) unsubscribe();
+      if (reloadInterval) clearInterval(reloadInterval);
     };
   }, [symbol, interval]);
 
+  const intervals: { value: Interval; label: string }[] = [
+    { value: "1m", label: "1m" },
+    { value: "5m", label: "5m" },
+    { value: "1d", label: "1d" },
+  ];
+
   return (
-    <div className="relative w-full h-full rounded-lg border border-[#1a1a1a] bg-[#0f0f0f]">
+    <div className="relative w-full h-full rounded-lg border border-[#1a1a1a] bg-[#0f0f0f] flex flex-col">
+      {/* Interval 선택 버튼 */}
+      <div className="flex items-center gap-2 p-3 border-b border-[#1a1a1a]">
+        {intervals.map((item) => (
+          <button
+            key={item.value}
+            onClick={() => setInterval(item.value)}
+            className={`px-3 py-1.5 text-sm font-medium rounded transition-colors ${
+              interval === item.value
+                ? "bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30"
+                : "text-zinc-400 hover:text-zinc-200 hover:bg-[#1a1a1a]"
+            }`}
+          >
+            {item.label}
+          </button>
+        ))}
+      </div>
+      
+      <div ref={chartContainerRef} className="flex-1 w-full" />
+      
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-[#0f0f0f]/80 z-10">
           <div className="flex items-center gap-2 text-[#00FFE0]">
@@ -215,7 +211,17 @@ export default function Chart({ symbol }: ChartProps) {
           </div>
         </div>
       )}
-      <div ref={chartContainerRef} className="w-full h-full" />
+
+      {error && !isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div className="text-center text-zinc-500">
+            <svg className="w-12 h-12 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <p className="text-sm">{error}</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

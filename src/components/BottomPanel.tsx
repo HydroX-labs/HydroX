@@ -1,82 +1,189 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { tradingApi, accountApi, PositionWithPnL, Position, Order, Balance } from "@/lib/api";
+import { useWallet } from "@/contexts/WalletContext";
+import { useToast } from "@/components/Toast";
 
-type TabType = "positions" | "openOrders" | "orderHistory" | "balances";
+type TabType = "positions" | "openOrders" | "order_history" | "balances";
 
-// Mock data for demonstration
-const mockPositions = [
-  {
-    symbol: "BTC_USDM_PERP",
-    side: "Long",
-    size: "0.5",
-    entryPrice: "97250.00",
-    markPrice: "97500.00",
-    pnl: "+125.00",
-    pnlPercent: "+0.26%",
-    leverage: "10x",
-    liquidationPrice: "87525.00",
-  },
-];
+interface BottomPanelProps {
+  walletAddress?: string | null;
+}
 
-const mockOpenOrders = [
-  {
-    id: "1",
-    symbol: "BTC_USDM_PERP",
-    side: "Buy",
-    type: "Limit",
-    price: "96000.00",
-    amount: "0.1",
-    filled: "0",
-    status: "Open",
-    time: "2024-01-15 14:30:22",
-  },
-  {
-    id: "2",
-    symbol: "ETH_USDM_PERP",
-    side: "Sell",
-    type: "Limit",
-    price: "3500.00",
-    amount: "1.5",
-    filled: "0",
-    status: "Open",
-    time: "2024-01-15 14:25:10",
-  },
-];
+export default function BottomPanel({ walletAddress: propWalletAddress }: BottomPanelProps = {}) {
+  const wallet = useWallet();
+  const { showToast } = useToast();
+  const walletAddress = propWalletAddress ?? wallet?.walletAddress;
 
-const mockOrderHistory = [
-  {
-    id: "101",
-    symbol: "BTC_USDM_PERP",
-    side: "Buy",
-    type: "Market",
-    price: "97250.00",
-    amount: "0.5",
-    filled: "0.5",
-    status: "Filled",
-    time: "2024-01-15 12:00:00",
-  },
-];
-
-const mockBalances = [
-  { asset: "USDM", available: "10,000.00", inOrder: "960.00", total: "10,960.00" },
-  { asset: "BTC", available: "0.5", inOrder: "0", total: "0.5" },
-  { asset: "ETH", available: "2.0", inOrder: "0", total: "2.0" },
-];
-
-export default function BottomPanel() {
   const [activeTab, setActiveTab] = useState<TabType>("positions");
+  const [positions, setPositions] = useState<PositionWithPnL[]>([]);
+  const [openOrders, setOpenOrders] = useState<Order[]>([]);
+  const [balances, setBalances] = useState<Balance[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [initialLoad, setInitialLoad] = useState(true);
+  const [closingPositionId, setClosingPositionId] = useState<string | null>(null);
+
+  // Load positions with PnL from backend
+  useEffect(() => {
+    if (!walletAddress) {
+      setPositions([]);
+      setLoading(false);
+      setInitialLoad(false);
+      return;
+    }
+
+    const loadPositions = async () => {
+      // Only show loading on initial load, not on refresh
+      if (initialLoad) setLoading(true);
+
+      try {
+        const data = await tradingApi.getPositionsWithPnL(walletAddress);
+        setPositions(data);
+      } catch (err) {
+        console.error("Failed to load positions:", err);
+        // Don't clear positions on error during refresh
+        if (initialLoad) setPositions([]);
+      } finally {
+        setLoading(false);
+        setInitialLoad(false);
+      }
+    };
+
+    loadPositions();
+    const interval = setInterval(loadPositions, 3000); // Refresh every 3 seconds
+    return () => clearInterval(interval);
+  }, [walletAddress, initialLoad]);
+
+  // Load balances from on-chain
+  useEffect(() => {
+    if (!walletAddress) {
+      setBalances([]);
+      return;
+    }
+
+    const loadBalances = async () => {
+      try {
+        const data = await accountApi.getBalances(walletAddress);
+        setBalances(data);
+      } catch (err) {
+        console.error("Failed to load balances:", err);
+        setBalances([]);
+      }
+    };
+
+    loadBalances();
+    const interval = setInterval(loadBalances, 30000); // Refresh every 30 seconds
+    return () => clearInterval(interval);
+  }, [walletAddress]);
+
+  // Load position history (closed positions)
+  const [positionHistory, setPositionHistory] = useState<Position[]>([]);
+
+  useEffect(() => {
+    if (!walletAddress) {
+      setPositionHistory([]);
+      return;
+    }
+
+    const loadPositionHistory = async () => {
+      try {
+        const data = await tradingApi.getPositionHistory(walletAddress);
+        setPositionHistory(data);
+      } catch (err) {
+        console.error("Failed to load position history:", err);
+        setPositionHistory([]);
+      }
+    };
+
+    loadPositionHistory();
+    // Refresh when positions change (after closing)
+  }, [walletAddress, positions.length]);
+
+  const handleClosePosition = async (positionId: string) => {
+    if (!walletAddress) return;
+
+    // Find position to get symbol for oracle lookup
+    const position = positions.find(p => p.id === positionId);
+    if (!position) {
+      showToast({
+        type: "error",
+        title: "Position Not Found",
+        message: "Could not find position to close",
+      });
+      return;
+    }
+
+    // Extract base symbol (e.g., "BTC" from "BTC_USDM")
+    const baseSymbol = position.symbol.split("_")[0];
+
+    // Check if position has on-chain reference
+    if (!position.tx_hash) {
+      showToast({
+        type: "error",
+        title: "Cannot Close Position",
+        message: "Position missing on-chain reference (tx_hash). This is a legacy position.",
+      });
+      return;
+    }
+
+    setClosingPositionId(positionId);
+    try {
+      // Use WalletContext closePosition which fetches oracle-signed price
+      // Pass txHash#outputIndex to find exact UTxO on-chain
+      const result = await wallet.closePosition({
+        positionId,
+        symbol: baseSymbol,
+        side: position.side as 'Long' | 'Short',
+        txHash: position.tx_hash,
+        outputIndex: position.output_index ?? 0,
+      });
+
+      // Show result
+      const isPnlPositive = result.realizedPnl >= 0;
+      showToast({
+        type: isPnlPositive ? "success" : "warning",
+        title: "Position Closed",
+        message: isPnlPositive ? "Trade closed with profit" : "Trade closed with loss",
+        details: [
+          { label: "Realized PnL", value: `${isPnlPositive ? "+" : ""}$${result.realizedPnl.toFixed(2)} (${result.pnlPercent.toFixed(2)}%)` },
+          { label: "Close Price", value: `$${result.closePrice.toLocaleString()}` },
+        ],
+      });
+
+      // Remove from local state
+      setPositions(prev => prev.filter(p => p.id !== positionId));
+    } catch (err) {
+      console.error("Failed to close position:", err);
+      showToast({
+        type: "error",
+        title: "Failed to Close Position",
+        message: "Please try again later",
+      });
+    } finally {
+      setClosingPositionId(null);
+    }
+  };
+
+  const handleCancelOrder = async (orderId: string) => {
+    try {
+      await tradingApi.cancelOrder(orderId);
+      setOpenOrders(prev => prev.filter(o => o.id !== orderId));
+    } catch (err) {
+      console.error("Failed to cancel order:", err);
+    }
+  };
 
   const tabs: { key: TabType; label: string; count?: number }[] = [
-    { key: "positions", label: "Positions", count: mockPositions.length },
-    { key: "openOrders", label: "Open Orders", count: mockOpenOrders.length },
-    { key: "orderHistory", label: "Order History" },
+    { key: "positions", label: "Positions", count: positions.length },
+    { key: "openOrders", label: "Open Orders", count: openOrders.length },
+    { key: "order_history", label: "Trade History", count: positionHistory.length },
     { key: "balances", label: "Balances" },
   ];
 
   return (
     <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg overflow-hidden">
-      {/* 탭 헤더 */}
+      {/* Tab Header */}
       <div className="flex border-b border-[#1f1f1f]">
         {tabs.map((tab) => (
           <button
@@ -102,23 +209,61 @@ export default function BottomPanel() {
         ))}
       </div>
 
-      {/* 탭 컨텐츠 */}
+      {/* Tab Content */}
       <div className="h-[200px] overflow-y-auto scrollbar-hide">
-        {activeTab === "positions" && <PositionsTable />}
-        {activeTab === "openOrders" && <OpenOrdersTable />}
-        {activeTab === "orderHistory" && <OrderHistoryTable />}
-        {activeTab === "balances" && <BalancesTable />}
+        {loading ? (
+          <div className="flex items-center justify-center h-full text-zinc-500">
+            <span className="animate-pulse">Loading...</span>
+          </div>
+        ) : (
+          <>
+            {activeTab === "positions" && (
+              <PositionsTable positions={positions} onClose={handleClosePosition} closingId={closingPositionId} />
+            )}
+            {activeTab === "openOrders" && (
+              <OpenOrdersTable orders={openOrders} onCancel={handleCancelOrder} />
+            )}
+            {activeTab === "order_history" && (
+              <PositionHistoryTable positions={positionHistory} />
+            )}
+            {activeTab === "balances" && (
+              <BalancesTable balances={balances} />
+            )}
+          </>
+        )}
       </div>
     </div>
   );
 }
 
-function PositionsTable() {
-  if (mockPositions.length === 0) {
+function EmptyState({ message, icon }: { message: string; icon: React.ReactNode }) {
+  return (
+    <div className="flex flex-col items-center justify-center h-full text-zinc-500">
+      <div className="opacity-30 mb-2">{icon}</div>
+      <p className="text-sm">{message}</p>
+    </div>
+  );
+}
+
+function PositionsTable({
+  positions,
+  onClose,
+  closingId
+}: {
+  positions: PositionWithPnL[];
+  onClose: (id: string) => void;
+  closingId?: string | null;
+}) {
+  if (positions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        No open positions
-      </div>
+      <EmptyState
+        message="No open positions"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4" />
+          </svg>
+        }
+      />
     );
   }
 
@@ -128,7 +273,9 @@ function PositionsTable() {
         <tr className="border-b border-[#1f1f1f]">
           <th className="text-left px-4 py-2 font-medium">Symbol</th>
           <th className="text-left px-4 py-2 font-medium">Side</th>
-          <th className="text-right px-4 py-2 font-medium">Size</th>
+          <th className="text-right px-4 py-2 font-medium">Size (BTC)</th>
+          <th className="text-right px-4 py-2 font-medium">Notional (USDM)</th>
+          <th className="text-right px-4 py-2 font-medium">Collateral</th>
           <th className="text-right px-4 py-2 font-medium">Entry Price</th>
           <th className="text-right px-4 py-2 font-medium">Mark Price</th>
           <th className="text-right px-4 py-2 font-medium">PnL (ROE%)</th>
@@ -138,28 +285,41 @@ function PositionsTable() {
         </tr>
       </thead>
       <tbody>
-        {mockPositions.map((pos, idx) => {
-          const isPnlPositive = pos.pnl.startsWith("+");
+        {positions.map((pos) => {
+          const isPnlPositive = pos.unrealized_pnl >= 0;
+          const isClosing = closingId === pos.id;
+          // Notional value = size * entry price (position value in USDM)
+          const notionalValue = pos.amount * pos.entry_price;
           return (
-            <tr key={idx} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
-              <td className="px-4 py-3 text-white">{pos.symbol.replace(/_/g, "/")}</td>
+            <tr key={pos.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
+              <td className="px-4 py-3 text-white">{pos.symbol.replace(/_USDM$/, "")}</td>
               <td className={`px-4 py-3 ${pos.side === "Long" ? "text-[#00FFE0]" : "text-red-500"}`}>
                 {pos.side}
               </td>
-              <td className="px-4 py-3 text-right text-white">{pos.size}</td>
-              <td className="px-4 py-3 text-right text-zinc-300">${pos.entryPrice}</td>
-              <td className="px-4 py-3 text-right text-zinc-300">${pos.markPrice}</td>
-              <td className={`px-4 py-3 text-right ${isPnlPositive ? "text-[#00FFE0]" : "text-red-500"}`}>
-                ${pos.pnl} ({pos.pnlPercent})
+              <td className="px-4 py-3 text-right text-white">{pos.amount.toFixed(4)}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">${notionalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">${pos.collateral.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">${pos.entry_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">${pos.mark_price.toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+              <td className={`px-4 py-3 text-right font-medium ${isPnlPositive ? "text-[#00FFE0]" : "text-red-500"}`}>
+                ${isPnlPositive ? "+" : ""}{pos.unrealized_pnl.toFixed(2)} ({pos.pnl_percent.toFixed(2)}%)
               </td>
-              <td className="px-4 py-3 text-right text-[#00FFE0]/70">{pos.leverage}</td>
-              <td className="px-4 py-3 text-right text-zinc-400">${pos.liquidationPrice}</td>
+              <td className="px-4 py-3 text-right text-[#00FFE0]/70">{pos.leverage}x</td>
+              <td className="px-4 py-3 text-right text-zinc-400">${pos.liquidation_price.toFixed(2)}</td>
               <td className="px-4 py-3 text-center">
                 <button className="px-2 py-1 text-xs bg-[#1a1a1a] hover:bg-[#00FFE0]/10 hover:text-[#00FFE0] border border-[#1f1f1f] hover:border-[#00FFE0]/30 rounded mr-1 transition-all">
                   TP/SL
                 </button>
-                <button className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all">
-                  Close
+                <button
+                  onClick={() => onClose(pos.id)}
+                  disabled={isClosing}
+                  className={`px-2 py-1 text-xs border rounded transition-all ${
+                    isClosing
+                      ? "bg-zinc-700 text-zinc-400 border-zinc-600 cursor-not-allowed"
+                      : "bg-red-500/10 text-red-400 hover:bg-red-500/20 border-red-500/30"
+                  }`}
+                >
+                  {isClosing ? "Closing..." : "Close"}
                 </button>
               </td>
             </tr>
@@ -170,12 +330,17 @@ function PositionsTable() {
   );
 }
 
-function OpenOrdersTable() {
-  if (mockOpenOrders.length === 0) {
+function OpenOrdersTable({ orders, onCancel }: { orders: Order[]; onCancel: (id: string) => void }) {
+  if (orders.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        No open orders
-      </div>
+      <EmptyState
+        message="No open orders"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+          </svg>
+        }
+      />
     );
   }
 
@@ -194,9 +359,9 @@ function OpenOrdersTable() {
         </tr>
       </thead>
       <tbody>
-        {mockOpenOrders.map((order) => (
+        {orders.map((order) => (
           <tr key={order.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
-            <td className="px-4 py-3 text-zinc-400">{order.time}</td>
+            <td className="px-4 py-3 text-zinc-400">{order.created_at}</td>
             <td className="px-4 py-3 text-white">{order.symbol.replace(/_/g, "/")}</td>
             <td className="px-4 py-3 text-zinc-300">{order.type}</td>
             <td className={`px-4 py-3 ${order.side === "Buy" ? "text-[#00FFE0]" : "text-red-500"}`}>
@@ -209,7 +374,10 @@ function OpenOrdersTable() {
               <button className="px-2 py-1 text-xs bg-[#1a1a1a] hover:bg-[#00FFE0]/10 hover:text-[#00FFE0] border border-[#1f1f1f] hover:border-[#00FFE0]/30 rounded mr-1 transition-all">
                 Edit
               </button>
-              <button className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all">
+              <button 
+                onClick={() => onCancel(order.id)}
+                className="px-2 py-1 text-xs bg-red-500/10 text-red-400 hover:bg-red-500/20 border border-red-500/30 rounded transition-all"
+              >
                 Cancel
               </button>
             </td>
@@ -220,60 +388,89 @@ function OpenOrdersTable() {
   );
 }
 
-function OrderHistoryTable() {
-  if (mockOrderHistory.length === 0) {
+function PositionHistoryTable({ positions }: { positions: Position[] }) {
+  if (positions.length === 0) {
     return (
-      <div className="flex items-center justify-center h-full text-zinc-500 text-sm">
-        No order history
-      </div>
+      <EmptyState
+        message="No closed positions"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+        }
+      />
     );
   }
+
+  // Helper to format symbol (remove _USDM suffix for display)
+  const formatSymbol = (symbol: string) => {
+    return symbol.replace(/_USDM$/, "").replace(/_/g, "/");
+  };
 
   return (
     <table className="w-full text-sm">
       <thead className="text-zinc-400 text-xs sticky top-0 bg-[#0f0f0f]">
         <tr className="border-b border-[#1f1f1f]">
-          <th className="text-left px-4 py-2 font-medium">Time</th>
+          <th className="text-left px-4 py-2 font-medium">Closed At</th>
           <th className="text-left px-4 py-2 font-medium">Symbol</th>
-          <th className="text-left px-4 py-2 font-medium">Type</th>
           <th className="text-left px-4 py-2 font-medium">Side</th>
-          <th className="text-right px-4 py-2 font-medium">Price</th>
-          <th className="text-right px-4 py-2 font-medium">Amount</th>
-          <th className="text-right px-4 py-2 font-medium">Filled</th>
-          <th className="text-center px-4 py-2 font-medium">Status</th>
+          <th className="text-right px-4 py-2 font-medium">Size (BTC)</th>
+          <th className="text-right px-4 py-2 font-medium">Notional (USDM)</th>
+          <th className="text-right px-4 py-2 font-medium">Entry Price</th>
+          <th className="text-right px-4 py-2 font-medium">Close Price</th>
+          <th className="text-right px-4 py-2 font-medium">Realized PnL</th>
         </tr>
       </thead>
       <tbody>
-        {mockOrderHistory.map((order) => (
-          <tr key={order.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
-            <td className="px-4 py-3 text-zinc-400">{order.time}</td>
-            <td className="px-4 py-3 text-white">{order.symbol.replace(/_/g, "/")}</td>
-            <td className="px-4 py-3 text-zinc-300">{order.type}</td>
-            <td className={`px-4 py-3 ${order.side === "Buy" ? "text-[#00FFE0]" : "text-red-500"}`}>
-              {order.side}
-            </td>
-            <td className="px-4 py-3 text-right text-zinc-300">${order.price}</td>
-            <td className="px-4 py-3 text-right text-white">{order.amount}</td>
-            <td className="px-4 py-3 text-right text-zinc-400">{order.filled}</td>
-            <td className="px-4 py-3 text-center">
-              <span className={`px-2 py-0.5 text-xs rounded border ${
-                order.status === "Filled"
-                  ? "bg-[#00FFE0]/10 text-[#00FFE0] border-[#00FFE0]/30"
-                  : order.status === "Cancelled"
-                  ? "bg-zinc-500/10 text-zinc-400 border-zinc-500/30"
-                  : "bg-yellow-500/10 text-yellow-400 border-yellow-500/30"
-              }`}>
-                {order.status}
-              </span>
-            </td>
-          </tr>
-        ))}
+        {positions.map((pos) => {
+          const pnl = pos.realized_pnl || 0;
+          const isPnlPositive = pnl >= 0;
+          const pnlPercent = pos.collateral > 0 ? (pnl / pos.collateral) * 100 : 0;
+          const notionalValue = pos.amount * pos.entry_price;
+          return (
+            <tr key={pos.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
+              <td className="px-4 py-3 text-zinc-400">
+                {pos.closed_at ? new Date(pos.closed_at).toLocaleString() : '-'}
+              </td>
+              <td className="px-4 py-3 text-white">{formatSymbol(pos.symbol)}</td>
+              <td className={`px-4 py-3 ${pos.side === "Long" ? "text-[#00FFE0]" : "text-red-500"}`}>
+                {pos.side}
+              </td>
+              <td className="px-4 py-3 text-right text-white">{pos.amount.toFixed(4)}</td>
+              <td className="px-4 py-3 text-right text-zinc-300">
+                ${notionalValue.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td className="px-4 py-3 text-right text-zinc-300">
+                ${pos.entry_price.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+              </td>
+              <td className="px-4 py-3 text-right text-zinc-300">
+                ${pos.close_price?.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || '-'}
+              </td>
+              <td className={`px-4 py-3 text-right font-medium ${isPnlPositive ? "text-[#00FFE0]" : "text-red-500"}`}>
+                {isPnlPositive ? "+" : ""}${pnl.toFixed(2)} ({pnlPercent.toFixed(2)}%)
+              </td>
+            </tr>
+          );
+        })}
       </tbody>
     </table>
   );
 }
 
-function BalancesTable() {
+function BalancesTable({ balances }: { balances: Balance[] }) {
+  if (balances.length === 0) {
+    return (
+      <EmptyState
+        message="No assets"
+        icon={
+          <svg className="w-10 h-10" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z" />
+          </svg>
+        }
+      />
+    );
+  }
+
   return (
     <table className="w-full text-sm">
       <thead className="text-zinc-400 text-xs sticky top-0 bg-[#0f0f0f]">
@@ -286,7 +483,7 @@ function BalancesTable() {
         </tr>
       </thead>
       <tbody>
-        {mockBalances.map((balance) => (
+        {balances.map((balance) => (
           <tr key={balance.asset} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
             <td className="px-4 py-3">
               <div className="flex items-center gap-2">
@@ -296,9 +493,9 @@ function BalancesTable() {
                 <span className="text-white font-medium">{balance.asset}</span>
               </div>
             </td>
-            <td className="px-4 py-3 text-right text-white">{balance.available}</td>
-            <td className="px-4 py-3 text-right text-zinc-400">{balance.inOrder}</td>
-            <td className="px-4 py-3 text-right text-zinc-300">{balance.total}</td>
+            <td className="px-4 py-3 text-right text-white">{balance.available.toFixed(2)}</td>
+            <td className="px-4 py-3 text-right text-zinc-400">{balance.locked.toFixed(2)}</td>
+            <td className="px-4 py-3 text-right text-zinc-300">{balance.total.toFixed(2)}</td>
             <td className="px-4 py-3 text-center">
               <button className="px-2 py-1 text-xs bg-[#00FFE0]/10 text-[#00FFE0] hover:bg-[#00FFE0]/20 border border-[#00FFE0]/30 rounded mr-1 transition-all">
                 Deposit

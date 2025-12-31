@@ -1,0 +1,6 @@
+{
+  "/page": "app/page.js",
+  "/perpetuals/page": "app/perpetuals/page.js",
+  "/stats/page": "app/stats/page.js",
+  "/vaults/page": "app/vaults/page.js"
+}

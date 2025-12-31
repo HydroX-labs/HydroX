@@ -3,6 +3,8 @@ import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
+import { WalletProvider } from "@/contexts/WalletContext";
+import { ToastProvider } from "@/components/Toast";
 
 const inter = Inter({
   variable: "--font-inter",
@@ -29,9 +31,13 @@ export default function RootLayout({
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased h-screen flex flex-col overflow-hidden bg-[#0a0a0a]`}
       >
-        <Header />
-        <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
-        <Footer />
+        <WalletProvider>
+          <ToastProvider>
+            <Header />
+            <div className="flex-1 min-h-0 overflow-hidden">{children}</div>
+            <Footer />
+          </ToastProvider>
+        </WalletProvider>
       </body>
     </html>
   );
