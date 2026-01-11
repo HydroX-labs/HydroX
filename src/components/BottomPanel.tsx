@@ -114,7 +114,7 @@ export default function BottomPanel({ walletAddress: propWalletAddress }: Bottom
       return;
     }
 
-    // Extract base symbol (e.g., "BTC" from "BTC_USDM")
+    // Extract base symbol (e.g., "BTC" from "BTC_USD")
     const baseSymbol = position.symbol.split("_")[0];
 
     // Check if position has on-chain reference
@@ -274,7 +274,7 @@ function PositionsTable({
           <th className="text-left px-4 py-2 font-medium">Symbol</th>
           <th className="text-left px-4 py-2 font-medium">Side</th>
           <th className="text-right px-4 py-2 font-medium">Size (BTC)</th>
-          <th className="text-right px-4 py-2 font-medium">Notional (USDM)</th>
+          <th className="text-right px-4 py-2 font-medium">Notional (USD)</th>
           <th className="text-right px-4 py-2 font-medium">Collateral</th>
           <th className="text-right px-4 py-2 font-medium">Entry Price</th>
           <th className="text-right px-4 py-2 font-medium">Mark Price</th>
@@ -288,11 +288,11 @@ function PositionsTable({
         {positions.map((pos) => {
           const isPnlPositive = pos.unrealized_pnl >= 0;
           const isClosing = closingId === pos.id;
-          // Notional value = size * entry price (position value in USDM)
+          // Notional value = size * entry price (position value in USD)
           const notionalValue = pos.amount * pos.entry_price;
           return (
             <tr key={pos.id} className="border-b border-[#1f1f1f]/50 hover:bg-[#00FFE0]/5 transition-colors">
-              <td className="px-4 py-3 text-white">{pos.symbol.replace(/_USDM$/, "")}</td>
+              <td className="px-4 py-3 text-white">{pos.symbol.replace(/_USD$/, "")}</td>
               <td className={`px-4 py-3 ${pos.side === "Long" ? "text-[#00FFE0]" : "text-red-500"}`}>
                 {pos.side}
               </td>
@@ -402,9 +402,9 @@ function PositionHistoryTable({ positions }: { positions: Position[] }) {
     );
   }
 
-  // Helper to format symbol (remove _USDM suffix for display)
+  // Helper to format symbol (remove _USD suffix for display)
   const formatSymbol = (symbol: string) => {
-    return symbol.replace(/_USDM$/, "").replace(/_/g, "/");
+    return symbol.replace(/_USD$/, "").replace(/_/g, "/");
   };
 
   return (
@@ -415,7 +415,7 @@ function PositionHistoryTable({ positions }: { positions: Position[] }) {
           <th className="text-left px-4 py-2 font-medium">Symbol</th>
           <th className="text-left px-4 py-2 font-medium">Side</th>
           <th className="text-right px-4 py-2 font-medium">Size (BTC)</th>
-          <th className="text-right px-4 py-2 font-medium">Notional (USDM)</th>
+          <th className="text-right px-4 py-2 font-medium">Notional (USD)</th>
           <th className="text-right px-4 py-2 font-medium">Entry Price</th>
           <th className="text-right px-4 py-2 font-medium">Close Price</th>
           <th className="text-right px-4 py-2 font-medium">Realized PnL</th>

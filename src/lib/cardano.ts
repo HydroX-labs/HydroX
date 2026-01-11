@@ -18,7 +18,7 @@ export type { OraclePriceFeed, ContractConfig };
  */
 export interface PositionDatum {
   trader: string;           // VerificationKeyHash (hex)
-  collateral: bigint;       // USDM amount (no decimals on-chain)
+  collateral: bigint;       // USD amount (no decimals on-chain)
   entry_price: bigint;      // Price scaled by 1e6
   size: bigint;             // Position size scaled by 1e8 for BTC
   is_long: boolean;
@@ -316,7 +316,7 @@ export async function findVaultUtxo(): Promise<{ txHash: string; outputIndex: nu
   const config = await configApi.getContractConfig();
   const utxos = await lucid.utxosAt(config.vault_script_addr);
 
-  // Find the main vault UTxO (the one with the most USDM)
+  // Find the main vault UTxO (the one with the most USD)
   let maxUsdm = BigInt(0);
   let vaultUtxo: { txHash: string; outputIndex: number } | null = null;
 

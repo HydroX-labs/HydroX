@@ -54,6 +54,7 @@ const Header = () => {
 
   const isPerpetualsActive = pathname.startsWith("/perpetuals") || pathname === "/";
   const isVaultsActive = pathname.startsWith("/vaults");
+  const isStakingActive = pathname.startsWith("/staking");
   const isStatsActive = pathname.startsWith("/stats");
 
   // Format address for display
@@ -97,6 +98,29 @@ const Header = () => {
               Vaults
             </Link>
             <Link
+              href="/staking"
+              className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-1.5 ${
+                isStakingActive
+                  ? "text-[#00FFE0] bg-[#00FFE0]/10 border border-[#00FFE0]/30"
+                  : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Staking
+            </Link>
+            <div
+              className="px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-1.5 text-zinc-500 bg-zinc-800/30 border border-zinc-700/30 cursor-not-allowed opacity-50"
+              title="Coming Soon"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Playground
+            </div>
+            <Link
               href="/stats"
               className={`px-4 py-2 rounded-lg transition-all text-sm font-medium flex items-center gap-1.5 ${
                 isStatsActive
@@ -107,7 +131,7 @@ const Header = () => {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
-              Stats
+              Stats (Dev)
             </Link>
           </nav>
         </div>
@@ -190,6 +214,28 @@ const Header = () => {
             >
               Vaults
             </Link>
+            <Link
+              href="/staking"
+              className={`px-4 py-2 rounded-lg flex items-center gap-1.5 ${
+                isStakingActive
+                  ? "text-[#00FFE0] bg-[#00FFE0]/10"
+                  : "text-zinc-400 hover:text-[#00FFE0] hover:bg-[#00FFE0]/5"
+              }`}
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Staking
+            </Link>
+            <div
+              className="px-4 py-2 rounded-lg flex items-center gap-1.5 text-zinc-500 bg-zinc-800/30 cursor-not-allowed opacity-50"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              Playground
+            </div>
             <Link
               href="/stats"
               className={`px-4 py-2 rounded-lg flex items-center gap-1.5 ${

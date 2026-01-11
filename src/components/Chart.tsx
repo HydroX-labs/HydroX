@@ -18,7 +18,7 @@ interface ChartProps {
 
 type Interval = "1m" | "5m" | "1d";
 
-export default function Chart({ symbol = "BTC_USDM" }: ChartProps) {
+export default function Chart({ symbol = "BTC_USD" }: ChartProps) {
   const chartContainerRef = useRef<HTMLDivElement>(null);
   const chartRef = useRef<IChartApi | null>(null);
   const seriesRef = useRef<ISeriesApi<"Candlestick"> | null>(null);

@@ -10,7 +10,7 @@ interface TradePanelProps {
   walletAddress?: string | null;
 }
 
-const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => {
+const TradePanel = ({ symbol = "BTC_USD", walletAddress }: TradePanelProps) => {
   const { openPosition } = useWallet();
   const { showToast } = useToast();
   const [activeTab, setActiveTab] = useState("buy"); // 'buy' or 'sell'
@@ -37,7 +37,7 @@ const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => 
     const loadBalance = async () => {
       setIsLoadingBalance(true);
       try {
-        const usdmBalance = await accountApi.getUSDMBalance(walletAddress);
+        const usdmBalance = await accountApi.getUSDBalance(walletAddress);
         setBalance(usdmBalance);
       } catch (err) {
         console.error("Failed to load balance:", err);
@@ -84,7 +84,7 @@ const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => 
 
     try {
       const entryPrice = orderType === "limit" ? parseFloat(price) : (ticker?.last_price || 0);
-      const collateralAmount = parseFloat(amount); // USDM margin
+      const collateralAmount = parseFloat(amount); // USD margin
       const leverageValue = parseInt(leverage);
 
       // 레버리지가 적용된 총 USD 가치 (예: 10 USD * 50x = 500 USD)
@@ -113,7 +113,7 @@ const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => 
         message: `${activeTab === "buy" ? "Long" : "Short"} position created on-chain`,
         details: [
           { label: "TX Hash", value: txHash },
-          { label: "Collateral", value: `${collateralAmount.toLocaleString()} USDM` },
+          { label: "Collateral", value: `${collateralAmount.toLocaleString()} USD` },
           { label: "Total Value", value: `$${totalPositionValue.toLocaleString()}` },
           { label: "Size", value: `${btcAmount.toFixed(4)} BTC` },
         ],
@@ -133,7 +133,7 @@ const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => 
     }
   };
 
-  const quoteAsset = symbol.split("_")[1] || "USDM";
+  const quoteAsset = symbol.split("_")[1] || "USD";
 
   // Calculate estimated total (입력값 * 레버리지)
   const leverageValue = parseInt(leverage) || 1;
@@ -178,7 +178,7 @@ const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => 
             ) : (
               <span className="text-[#00FFE0] font-bold text-sm">{balance.toLocaleString()}</span>
             )}
-            <span className="text-zinc-500 text-[10px] font-bold">USDM</span>
+            <span className="text-zinc-500 text-[10px] font-bold">USD</span>
           </div>
         </div>
 
@@ -303,7 +303,7 @@ const TradePanel = ({ symbol = "BTC_USDM", walletAddress }: TradePanelProps) => 
               className="w-full bg-[#141414] border border-[#1f1f1f] rounded p-2 pr-12 text-sm focus:border-[#00FFE0]/50 focus:outline-none focus:ring-1 focus:ring-[#00FFE0]/20 transition-all"
             />
             <div className="absolute right-3 top-1/2 -translate-y-1/2 text-[10px] font-bold text-zinc-500">
-              USDM
+              USD
             </div>
           </div>
           {amount && ticker && (

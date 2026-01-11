@@ -7,7 +7,7 @@ interface TradeHistoryProps {
   symbol?: string;
 }
 
-const TradeHistory = ({ symbol = "BTC_USDM" }: TradeHistoryProps) => {
+const TradeHistory = ({ symbol = "BTC_USD" }: TradeHistoryProps) => {
   const [trades, setTrades] = useState<Trade[]>([]);
   const [loading, setLoading] = useState(true);
 

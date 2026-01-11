@@ -9,9 +9,9 @@ interface SymbolSelectorProps {
 
 // Perpetual markets only - no _PERP suffix needed
 const AVAILABLE_SYMBOLS = [
-  { symbol: "BTC_USDM", display: "BTC/USDM" },
-  { symbol: "ETH_USDM", display: "ETH/USDM" },
-  { symbol: "SOL_USDM", display: "SOL/USDM" },
+  { symbol: "BTC_USD", display: "BTC/USD" },
+  { symbol: "ETH_USD", display: "ETH/USD" },
+  { symbol: "SOL_USD", display: "SOL/USD" },
 ];
 
 const SymbolSelector = ({
@@ -25,7 +25,7 @@ const SymbolSelector = ({
     (s) => s.symbol === selectedSymbol
   );
   const displayName =
-    currentSymbol?.display || selectedSymbol.replace(/_USDM$/, "");
+    currentSymbol?.display || selectedSymbol.replace(/_USD$/, "");
 
   // 외부 클릭 시 드롭다운 닫기
   useEffect(() => {

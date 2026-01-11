@@ -39,7 +39,7 @@ export interface Position {
   side: string;
   amount: number;        // BTC size
   entry_price: number;
-  collateral: number;    // USDM margin
+  collateral: number;    // USD margin
   leverage: number;
   is_open: boolean;
   created_at: string;
@@ -295,18 +295,18 @@ export const userApi = {
 
 // Account API - On-chain balance queries
 export const accountApi = {
-  // Get all balances for a wallet address (USDM, ADA, etc.)
+  // Get all balances for a wallet address (USD, ADA, etc.)
   getBalances: (address: string) =>
     fetchAPI<Balance[]>(`/api/v1/account/balances/${address}`),
 
-  // Get USDM balance specifically
-  getUSDMBalance: async (address: string): Promise<number> => {
+  // Get USD balance specifically
+  getUSDBalance: async (address: string): Promise<number> => {
     try {
       const balances = await fetchAPI<Balance[]>(`/api/v1/account/balances/${address}`);
-      const usdm = balances.find(b => b.asset === 'USDM');
-      return usdm?.available ?? 0;
+      const usd = balances.find(b => b.asset === 'USD');
+      return usd?.available ?? 0;
     } catch (error) {
-      console.error('Failed to fetch USDM balance:', error);
+      console.error('Failed to fetch USD balance:', error);
       return 0;
     }
   },
@@ -320,7 +320,7 @@ export interface VaultScriptInfo {
 }
 
 export const vaultScriptApi = {
-  // Get USDM and ADA balance at the vault script address
+  // Get USD and ADA balance at the vault script address
   getVaultInfo: () => fetchAPI<VaultScriptInfo>('/api/v1/vault/info'),
 };
 
@@ -400,6 +400,94 @@ export const oracleApi = {
     }
     return response.data;
   },
+};
+
+// TX Builder API - Backend transaction construction
+export interface BuildOpenPositionRequest {
+  wallet_address: string;
+  symbol: string;
+  side: 'Long' | 'Short';
+  entry_price: number;
+  amount: number;
+  collateral: number;
+  leverage: number;
+}
+
+export interface BuildClosePositionRequest {
+  wallet_address: string;
+  position_tx_hash: string;
+  position_output_index: number;
+  symbol: string;
+  side: 'Long' | 'Short';
+}
+
+export interface BuildDepositRequest {
+  wallet_address: string;
+  amount: number;
+}
+
+export interface BuildWithdrawRequest {
+  wallet_address: string;
+  shares: number;
+}
+
+export interface BuildTxResponse {
+  success: boolean;
+  tx_cbor?: string;
+  tx_hash?: string;
+  error?: string;
+}
+
+export interface BuildOpenPositionResponse extends BuildTxResponse {
+  output_index?: number;
+  fee?: number;
+}
+
+export interface BuildClosePositionResponse extends BuildTxResponse {
+  oracle_price?: number;
+  pnl_amount?: number;
+  is_profit?: boolean;
+  trader_receives?: number;
+}
+
+export interface BuildDepositResponse extends BuildTxResponse {
+  shares_to_receive?: number;
+  is_initial_deposit?: boolean;
+}
+
+export interface BuildWithdrawResponse extends BuildTxResponse {
+  usdm_to_receive?: number;
+  is_full_withdrawal?: boolean;
+}
+
+export const txBuilderApi = {
+  // Build OpenPosition transaction
+  buildOpenPosition: (params: BuildOpenPositionRequest) =>
+    fetchAPI<BuildOpenPositionResponse>('/api/v1/tx/build/open-position', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // Build ClosePosition transaction
+  buildClosePosition: (params: BuildClosePositionRequest) =>
+    fetchAPI<BuildClosePositionResponse>('/api/v1/tx/build/close-position', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // Build Deposit transaction
+  buildDeposit: (params: BuildDepositRequest) =>
+    fetchAPI<BuildDepositResponse>('/api/v1/tx/build/deposit', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
+
+  // Build Withdraw transaction
+  buildWithdraw: (params: BuildWithdrawRequest) =>
+    fetchAPI<BuildWithdrawResponse>('/api/v1/tx/build/withdraw', {
+      method: 'POST',
+      body: JSON.stringify(params),
+    }),
 };
 
 // WebSocket connection manager

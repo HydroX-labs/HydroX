@@ -22,7 +22,7 @@ export default function VaultsPage() {
   const [localTransactions, setLocalTransactions] = useState<LocalTransaction[]>([]);
   const [userInfo, setUserInfo] = useState<UserVaultInfo | null>(null);
   const [vaultScriptInfo, setVaultScriptInfo] = useState<VaultScriptInfo | null>(null);
-  const [userUsdmBalance, setUserUsdmBalance] = useState<number>(0);
+  const [userUsdBalance, setUserUsdBalance] = useState<number>(0);
   const [loading, setLoading] = useState(true);
   const [txStatus, setTxStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
@@ -79,20 +79,20 @@ export default function VaultsPage() {
     loadVaults();
   }, []);
 
-  // Load user's USDM balance when wallet is connected
+  // Load user's USD balance when wallet is connected
   useEffect(() => {
     const loadUserBalance = async () => {
       if (!walletAddress) {
-        setUserUsdmBalance(0);
+        setUserUsdBalance(0);
         return;
       }
       try {
-        const balance = await accountApi.getUSDMBalance(walletAddress);
-        setUserUsdmBalance(balance);
-        console.log("User USDM balance:", balance);
+        const balance = await accountApi.getUSDBalance(walletAddress);
+        setUserUsdBalance(balance);
+        console.log("User USD balance:", balance);
       } catch (err) {
-        console.error("Failed to load user USDM balance:", err);
-        setUserUsdmBalance(0);
+        console.error("Failed to load user USD balance:", err);
+        setUserUsdBalance(0);
       }
     };
 
@@ -127,10 +127,10 @@ export default function VaultsPage() {
       const scriptInfo = await vaultScriptApi.getVaultInfo().catch(() => null);
       setVaultScriptInfo(scriptInfo);
 
-      // Also refresh user's USDM balance
+      // Also refresh user's USD balance
       if (walletAddress) {
-        const balance = await accountApi.getUSDMBalance(walletAddress);
-        setUserUsdmBalance(balance);
+        const balance = await accountApi.getUSDBalance(walletAddress);
+        setUserUsdBalance(balance);
       }
     } catch (err) {
       console.error("Failed to refresh vault info:", err);
@@ -147,7 +147,7 @@ export default function VaultsPage() {
         throw new Error("Invalid amount");
       }
 
-      console.log("Depositing to vault:", depositAmount, "USDM");
+      console.log("Depositing to vault:", depositAmount, "USD");
       const result = await depositToVault(depositAmount);
 
       // Save to local history
@@ -162,7 +162,7 @@ export default function VaultsPage() {
 
       setTxStatus({
         type: 'success',
-        message: `Deposited ${depositAmount} USDM. TX: ${result.txHash.slice(0, 8)}...`,
+        message: `Deposited ${depositAmount} USD. TX: ${result.txHash.slice(0, 8)}...`,
       });
       setAmount("");
 
@@ -204,7 +204,7 @@ export default function VaultsPage() {
 
       setTxStatus({
         type: 'success',
-        message: `Withdrew ${result.amount} USDM. TX: ${result.txHash.slice(0, 8)}...`,
+        message: `Withdrew ${result.amount} USD. TX: ${result.txHash.slice(0, 8)}...`,
       });
       setAmount("");
 
@@ -235,7 +235,7 @@ export default function VaultsPage() {
     );
   }
 
-  const formatUSDM = (num: number | undefined) => {
+  const formatUSD = (num: number | undefined) => {
     if (num === undefined || num === 0) return "0";
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 0,
@@ -288,21 +288,15 @@ export default function VaultsPage() {
             </div>
             <div>
               <h2 className="text-lg font-semibold text-white">Vault Liquidity</h2>
-              <p className="text-zinc-500 text-sm">On-chain USDM deposits</p>
+              <p className="text-zinc-500 text-sm">On-chain USD deposits</p>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
-              <p className="text-zinc-400 text-sm">Total USDM Deposited</p>
+              <p className="text-zinc-400 text-sm">Total USD Deposited</p>
               <p className={`text-2xl font-bold mt-1 ${vaultScriptInfo?.total_usdm ? "text-[#00FFE0]" : "text-zinc-500"}`}>
-                {formatUSDM(vaultScriptInfo?.total_usdm)} <span className="text-sm font-normal text-zinc-400">USDM</span>
-              </p>
-            </div>
-            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
-              <p className="text-zinc-400 text-sm">Total ADA in Vault</p>
-              <p className={`text-2xl font-bold mt-1 ${vaultScriptInfo?.total_ada ? "text-white" : "text-zinc-500"}`}>
-                {vaultScriptInfo?.total_ada?.toFixed(2) ?? "0.00"} <span className="text-sm font-normal text-zinc-400">ADA</span>
+                {formatUSD(vaultScriptInfo?.total_usdm)} <span className="text-sm font-normal text-zinc-400">USD</span>
               </p>
             </div>
             <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
@@ -312,23 +306,9 @@ export default function VaultsPage() {
               </p>
             </div>
             <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
-              <p className="text-zinc-400 text-sm">Depositors</p>
-              <p className="text-2xl font-bold mt-1 text-zinc-500">
-                --
-              </p>
-            </div>
-            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
-              <p className="text-zinc-400 text-sm">Capacity Used</p>
+              <p className="text-zinc-400 text-sm">Utilization</p>
               <p className="text-2xl font-bold mt-1 text-zinc-500">
                 --<span className="text-sm font-normal text-zinc-400">%</span>
-              </p>
-            </div>
-            <div className="bg-[#141414] border border-[#1f1f1f] rounded-lg p-4">
-              <p className="text-zinc-400 text-sm">Script Address</p>
-              <p className="text-sm font-mono mt-1 text-zinc-300 truncate" title={vaultScriptInfo?.script_address}>
-                {vaultScriptInfo?.script_address
-                  ? `${vaultScriptInfo.script_address.slice(0, 12)}...${vaultScriptInfo.script_address.slice(-6)}`
-                  : "Not configured"}
               </p>
             </div>
           </div>
@@ -448,7 +428,7 @@ export default function VaultsPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-zinc-400 text-sm mb-2">
-                  {activeTab === "deposit" ? "Amount (USDM)" : "Shares to Burn"}
+                  {activeTab === "deposit" ? "Amount (USD)" : "Shares to Burn"}
                 </label>
                 <div className="relative">
                   <input
@@ -460,7 +440,7 @@ export default function VaultsPage() {
                   />
                   <button
                     onClick={() =>
-                      setAmount(userUsdmBalance?.toString() || "")
+                      setAmount(userUsdBalance?.toString() || "")
                     }
                     className="absolute right-3 top-1/2 -translate-y-1/2 text-[#00FFE0] text-sm font-medium hover:text-[#00FFE0]/80"
                   >
@@ -473,9 +453,9 @@ export default function VaultsPage() {
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">Your Balance</span>
                   <span
-                    className={userUsdmBalance > 0 ? "text-white" : "text-zinc-500"}
+                    className={userUsdBalance > 0 ? "text-white" : "text-zinc-500"}
                   >
-                    {userUsdmBalance > 0 ? formatUSDM(userUsdmBalance) : "--"} USDM
+                    {userUsdBalance > 0 ? formatUSD(userUsdBalance) : "--"} USD
                   </span>
                 </div>
                 <div className="flex justify-between text-sm">
@@ -488,7 +468,7 @@ export default function VaultsPage() {
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-zinc-400">Min. Deposit</span>
-                  <span className="text-zinc-500">100 USDM</span>
+                  <span className="text-zinc-500">100 USD</span>
                 </div>
               </div>
 
@@ -517,14 +497,14 @@ export default function VaultsPage() {
                   : !walletAddress
                   ? "Connect Wallet"
                   : activeTab === "deposit"
-                  ? `Deposit ${amount ? amount + " USDM" : ""}`
+                  ? `Deposit ${amount ? amount + " USD" : ""}`
                   : `Withdraw ${amount ? amount + " Shares" : ""}`}
               </button>
 
               <p className="text-zinc-500 text-xs text-center">
                 {activeTab === "withdraw"
-                  ? "Enter shares to burn (not USDM amount)"
-                  : `Min. Deposit: 100 USDM`}
+                  ? "Enter shares to burn (not USD amount)"
+                  : `Min. Deposit: 100 USD`}
               </p>
             </div>
           </div>
@@ -569,7 +549,7 @@ export default function VaultsPage() {
                         </span>
                       </td>
                       <td className="text-right text-white font-mono">
-                        {formatUSDM(tx.amount)} USDM
+                        {formatUSD(tx.amount)} USD
                       </td>
                       <td className="text-right text-zinc-400 font-mono text-sm">
                         {tx.txHash ? (

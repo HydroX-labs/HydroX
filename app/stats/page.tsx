@@ -28,7 +28,7 @@ export default function StatsPage() {
   const [statsLoading, setStatsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const formatUSDM = (num: number | undefined) => {
+  const formatUSD = (num: number | undefined) => {
     if (num === undefined || num === 0) return "0";
     return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 0,
@@ -45,10 +45,9 @@ export default function StatsPage() {
       console.log("Loaded config:", config);
       setContractConfig(config);
 
-      // Use hardcoded Blockfrost settings for Preview testnet
-      // These are public testnet credentials
-      const BLOCKFROST_URL = "https://cardano-preview.blockfrost.io/api/v0";
-      const BLOCKFROST_KEY = "previewxYyB0Uj87BX2fEUwMVgsMuq8OYdvaOFe";
+      // Use Blockfrost settings from environment variables
+      const BLOCKFROST_URL = process.env.NEXT_PUBLIC_BLOCKFROST_URL || "https://cardano-preview.blockfrost.io/api/v0";
+      const BLOCKFROST_KEY = process.env.NEXT_PUBLIC_BLOCKFROST_API_KEY || "";
 
       // Helper to fetch UTxOs from an address
       const fetchUtxos = async (address: string): Promise<UtxoInfo[]> => {
@@ -183,7 +182,7 @@ export default function StatsPage() {
               <span className="text-zinc-300">{contractConfig?.network || "--"}</span>
             </div>
             <div className="bg-[#0a0a0a] rounded p-3">
-              <span className="text-zinc-500 block mb-1">USDM Policy ID</span>
+              <span className="text-zinc-500 block mb-1">USD Policy ID</span>
               <span className="text-zinc-300 break-all text-[10px]">{contractConfig?.usdm_policy_id || "--"}</span>
             </div>
             <div className="bg-[#0a0a0a] rounded p-3">
@@ -204,22 +203,22 @@ export default function StatsPage() {
             <div className="bg-[#0a0a0a] rounded-lg p-4 border border-[#1f1f1f]">
               <p className="text-zinc-500 text-xs mb-1">Total Value Locked</p>
               <p className="text-white text-2xl font-bold">
-                {formatUSDM((vaultStats?.totalUsdm || 0) + (positionStats?.totalUsdm || 0))}
-                <span className="text-sm font-normal text-zinc-400 ml-1">USDM</span>
+                {formatUSD((vaultStats?.totalUsdm || 0) + (positionStats?.totalUsdm || 0))}
+                <span className="text-sm font-normal text-zinc-400 ml-1">USD</span>
               </p>
             </div>
             <div className="bg-[#0a0a0a] rounded-lg p-4 border border-[#1f1f1f]">
               <p className="text-zinc-500 text-xs mb-1">Vault Liquidity</p>
               <p className="text-[#00FFE0] text-2xl font-bold">
-                {formatUSDM(vaultStats?.totalUsdm)}
-                <span className="text-sm font-normal text-zinc-400 ml-1">USDM</span>
+                {formatUSD(vaultStats?.totalUsdm)}
+                <span className="text-sm font-normal text-zinc-400 ml-1">USD</span>
               </p>
             </div>
             <div className="bg-[#0a0a0a] rounded-lg p-4 border border-[#1f1f1f]">
               <p className="text-zinc-500 text-xs mb-1">Position Collateral</p>
               <p className="text-purple-400 text-2xl font-bold">
-                {formatUSDM(positionStats?.totalUsdm)}
-                <span className="text-sm font-normal text-zinc-400 ml-1">USDM</span>
+                {formatUSD(positionStats?.totalUsdm)}
+                <span className="text-sm font-normal text-zinc-400 ml-1">USD</span>
               </p>
             </div>
             <div className="bg-[#0a0a0a] rounded-lg p-4 border border-[#1f1f1f]">
@@ -255,8 +254,8 @@ export default function StatsPage() {
                 <p className="text-white text-xl font-bold">{vaultStats?.totalAda?.toFixed(2) ?? "--"}</p>
               </div>
               <div className="bg-[#0a0a0a] rounded p-3 border border-[#00FFE0]/10">
-                <p className="text-zinc-500 text-xs">Total USDM</p>
-                <p className="text-[#00FFE0] text-xl font-bold">{formatUSDM(vaultStats?.totalUsdm)}</p>
+                <p className="text-zinc-500 text-xs">Total USD</p>
+                <p className="text-[#00FFE0] text-xl font-bold">{formatUSD(vaultStats?.totalUsdm)}</p>
               </div>
               <div className="bg-[#0a0a0a] rounded p-3 border border-[#00FFE0]/10">
                 <p className="text-zinc-500 text-xs">Script Hash</p>
@@ -334,7 +333,7 @@ export default function StatsPage() {
               </div>
               <div className="bg-[#0a0a0a] rounded p-3 border border-purple-500/10">
                 <p className="text-zinc-500 text-xs">Total Collateral</p>
-                <p className="text-purple-400 text-xl font-bold">{formatUSDM(positionStats?.totalUsdm)}</p>
+                <p className="text-purple-400 text-xl font-bold">{formatUSD(positionStats?.totalUsdm)}</p>
               </div>
               <div className="bg-[#0a0a0a] rounded p-3 border border-purple-500/10">
                 <p className="text-zinc-500 text-xs">Script Hash</p>

@@ -7,7 +7,7 @@ import BottomPanel from "@/components/BottomPanel";
 import { useWallet } from "@/contexts/WalletContext";
 
 export default function PerpetualsPage() {
-  const symbol = "BTC_USDM";
+  const symbol = "BTC_USD";
   const { walletAddress } = useWallet();
 
   return (
@@ -19,7 +19,7 @@ export default function PerpetualsPage() {
         {/* 시장 정보 - BTC 고정 */}
         <div className="flex items-stretch bg-[#0f0f0f] border border-[#1a1a1a] rounded-lg shrink-0">
           <div className="px-4 py-3 flex items-center border-r border-[#1f1f1f]">
-            <span className="text-white font-bold text-lg">BTC/USDM</span>
+            <span className="text-white font-bold text-lg">BTC/USD</span>
             <span className="ml-2 text-xs px-1.5 py-0.5 rounded bg-[#00FFE0]/10 text-[#00FFE0] border border-[#00FFE0]/30">
               PERP
             </span>
